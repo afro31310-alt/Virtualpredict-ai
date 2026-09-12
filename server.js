@@ -1,97 +1,65 @@
-require("dotenv").config();
 const express = require("express");
 const multer = require("multer");
 const OpenAI = require("openai");
+const path = require("path");
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const port = process.env.PORT || 10000;
 
 const upload = multer({
   storage: multer.memoryStorage(),
   limits: { fileSize: 10 * 1024 * 1024 }
 });
 
-const apiKey = process.env.OPENAI_API_KEY;
-if (!apiKey) console.warn("OPENAI_API_KEY is missing.");
+const client = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY
+});
 
-const client = new OpenAI({ apiKey });
+app.use(express.static(path.join(__dirname, "public")));
 
-app.use(express.static("public"));
-
-app.get("/health", (req, res) => {
-  res.json({ ok: true, aiConfigured: !!apiKey });
+app.get("/api/health", (req, res) => {
+  res.json({ ok: true });
 });
 
 app.post("/api/analyze", upload.single("image"), async (req, res) => {
   try {
-    if (!apiKey) {
+    if (!process.env.OPENAI_API_KEY) {
       return res.status(500).json({
-        error: "The AI server is not configured. Add OPENAI_API_KEY to the server environment."
+        error: "OPENAI_API_KEY is not configured on the server."
       });
     }
 
     if (!req.file) {
-      return res.status(400).json({ error: "No screenshot was uploaded." });
+      return res.status(400).json({
+        error: "Please upload a screenshot."
+      });
     }
 
-    const dataUrl =
-      `data:${req.file.mimetype};base64,${req.file.buffer.toString("base64")}`;
+    const base64 = req.file.buffer.toString("base64");
+    const mime = req.file.mimetype || "image/jpeg";
 
-    const response = await client.responses.create({
-      model: process.env.OPENAI_MODEL || "gpt-5.6-luna",
-      input: [{
-        role: "user",
-        content: [
-          {
-            type: "input_text",
-            text: `Analyze this screenshot of an instant virtual sports game.
+    const prompt = `
+Analyze this screenshot of an instant/virtual football game.
 
-Use ONLY information visible in the screenshot. Read the sport/game, teams or competitors, visible market, and visible odds where possible.
+IMPORTANT:
+- Detect EVERY clearly visible game/match in the screenshot, not just one.
+- Create one prediction object for EACH visible game.
+- Do not invent teams, scores, odds, markets, or other information that is not visible.
+- If a game is too unclear to identify, do not invent details.
+- Virtual-game results can be random. Do NOT claim certainty or guaranteed wins.
+- Confidence must be an estimate from 0 to 100.
+- Keep each analysis short and based only on visible information.
 
-Return an estimate, not a guarantee. Do not invent statistics, previous results, hidden information, or odds.
+Return ONLY valid JSON in exactly this structure:
 
-If the screenshot is unclear, say so and lower confidence.`
-          },
-          { type: "input_image", image_url: dataUrl }
-        ]
-      }],
-      text: {
-        format: {
-          type: "json_schema",
-          name: "virtual_game_prediction",
-          strict: true,
-          schema: {
-            type: "object",
-            properties: {
-              game: { type: "string" },
-              market: { type: "string" },
-              prediction: { type: "string" },
-              confidence: { type: "string" },
-              alternative: { type: "string" },
-              risk: { type: "string", enum: ["Low", "Medium", "High"] },
-              analysis: { type: "string" }
-            },
-            required: [
-              "game", "market", "prediction", "confidence",
-              "alternative", "risk", "analysis"
-            ],
-            additionalProperties: false
-          }
-        }
-      }
-    });
-
-    const result = JSON.parse(response.output_text);
-
-    res.json(result);
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({
-      error: error?.message || "AI analysis failed."
-    });
-  }
-});
-
-app.listen(PORT, () => {
-  console.log(`VirtualPredict AI running on port ${PORT}`);
-});
+{
+  "games": [
+    {
+      "game": "Game 1",
+      "teams": "Home Team vs Away Team",
+      "market": "1X2 / Over-Under / BTTS / other visible market",
+      "prediction": "your best estimate",
+      "confidence": 0,
+      "alternative": "safer alternative if supported",
+      "risk": "Low / Medium / High",
+      "analysis
