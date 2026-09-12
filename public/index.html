@@ -14,8 +14,8 @@
     body {
       margin: 0;
       font-family: Arial, sans-serif;
-      background: #0b0f19;
-      color: #ffffff;
+      background: #020611;
+      color: white;
     }
 
     .container {
@@ -38,10 +38,11 @@
     .header p {
       color: #aeb7c7;
       margin-top: 8px;
+      font-size: 17px;
     }
 
     .card {
-      background: #151b28;
+      background: #050a17;
       border: 1px solid #273044;
       border-radius: 18px;
       padding: 20px;
@@ -59,6 +60,11 @@
       margin-top: 0;
     }
 
+    .upload-area p {
+      font-size: 16px;
+      line-height: 1.4;
+    }
+
     .buttons {
       display: flex;
       gap: 10px;
@@ -67,8 +73,10 @@
       margin-top: 18px;
     }
 
-    button {
-      border: none;
+    .upload-button {
+      display: inline-block;
+      background: #263149;
+      color: white;
       border-radius: 10px;
       padding: 13px 18px;
       font-size: 15px;
@@ -76,33 +84,34 @@
       cursor: pointer;
     }
 
-    .primary {
-      background: #6c5ce7;
-      color: white;
-    }
-
-    .secondary {
-      background: #263149;
-      color: white;
-    }
-
-    button:disabled {
-      opacity: 0.5;
-      cursor: not-allowed;
+    .upload-button:active {
+      transform: scale(0.97);
     }
 
     input[type="file"] {
-      display: none;
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      opacity: 0;
+      pointer-events: none;
     }
 
     #preview {
       width: 100%;
-      max-height: 400px;
+      max-height: 420px;
       object-fit: contain;
       border-radius: 12px;
       margin-top: 20px;
       display: none;
       background: #080b12;
+      border: 1px solid #39445d;
+    }
+
+    #selectedText {
+      display: none;
+      color: #00d084;
+      font-weight: bold;
+      margin-top: 12px;
     }
 
     .analyze {
@@ -111,6 +120,16 @@
       font-size: 17px;
       background: #00a86b;
       color: white;
+      border: none;
+      border-radius: 10px;
+      padding: 15px;
+      font-weight: bold;
+      cursor: pointer;
+      display: none;
+    }
+
+    .analyze:disabled {
+      opacity: 0.6;
     }
 
     .status {
@@ -176,92 +195,282 @@
 
 <body>
 
-  <div class="container">
+<div class="container">
 
-    <div class="header">
-      <h1>⚽ VirtualPredict AI</h1>
-      <p>Upload a virtual football screenshot for AI analysis</p>
+  <div class="header">
+    <h1>⚽ VirtualPredict AI</h1>
+    <p>Upload a virtual football screenshot for AI analysis</p>
+  </div>
+
+  <div class="card">
+
+    <div class="upload-area">
+
+      <h2>Upload Screenshot</h2>
+
+      <p>
+        Choose a screenshot from your phone or take a new photo.
+      </p>
+
+      <div class="buttons">
+
+        <label for="galleryInput" class="upload-button">
+          🖼️ Gallery
+        </label>
+
+        <label for="cameraInput" class="upload-button">
+          📷 Camera
+        </label>
+
+      </div>
+
+      <input
+        id="galleryInput"
+        type="file"
+        accept="image/*"
+        onchange="handleFile(this.files[0])"
+      >
+
+      <input
+        id="cameraInput"
+        type="file"
+        accept="image/*"
+        capture="environment"
+        onchange="handleFile(this.files[0])"
+      >
+
+      <div id="selectedText">
+        ✅ Screenshot selected
+      </div>
+
+      <img
+        id="preview"
+        alt="Selected screenshot"
+      >
+
+      <button
+        id="analyzeButton"
+        class="analyze"
+        type="button"
+        onclick="analyzeScreenshot()"
+      >
+        🔍 Analyze Screenshot
+      </button>
+
+      <div id="status" class="status"></div>
+
+      <div id="error" class="error"></div>
+
     </div>
 
-    <div class="card">
+  </div>
 
-      <div class="upload-area">
+  <div id="result" class="card result">
 
-        <h2>Upload Screenshot</h2>
+    <h2>📊 AI Analysis</h2>
 
-        <p>
-          Choose a screenshot from your phone or take a new photo.
-        </p>
-
-        <div class="buttons">
-
-          <button
-            class="secondary"
-            type="button"
-            onclick="document.getElementById('galleryInput').click()">
-            🖼️ Gallery
-          </button>
-
-          <button
-            class="secondary"
-            type="button"
-            onclick="document.getElementById('cameraInput').click()">
-            📷 Camera
-          </button>
-
-        </div>
-
-        <input
-          id="galleryInput"
-          type="file"
-          accept="image/*">
-
-        <input
-          id="cameraInput"
-          type="file"
-          accept="image/*"
-          capture="environment">
-
-        <img id="preview" alt="Screenshot preview">
-
-        <button
-          id="analyzeButton"
-          class="analyze"
-          type="button"
-          disabled>
-          🔍 Analyze Screenshot
-        </button>
-
-        <div id="status" class="status"></div>
-
-        <div id="error" class="error"></div>
-
-      </div>
-
+    <div class="result-row">
+      <div class="label">Game</div>
+      <div id="game" class="value">-</div>
     </div>
 
-    <div id="result" class="card result">
+    <div class="result-row">
+      <div class="label">Market</div>
+      <div id="market" class="value">-</div>
+    </div>
 
-      <h2>📊 AI Analysis</h2>
+    <div class="result-row prediction">
+      <div class="label">Prediction</div>
+      <div id="prediction" class="value">-</div>
+    </div>
 
-      <div class="result-row">
-        <div class="label">Game</div>
-        <div id="game" class="value">-</div>
-      </div>
+    <div class="result-row">
+      <div class="label">Confidence</div>
+      <div id="confidence" class="value">-</div>
+    </div>
 
-      <div class="result-row">
-        <div class="label">Market</div>
-        <div id="market" class="value">-</div>
-      </div>
+    <div class="result-row">
+      <div class="label">Alternative</div>
+      <div id="alternative" class="value">-</div>
+    </div>
 
-      <div class="result-row prediction">
-        <div class="label">Prediction</div>
-        <div id="prediction" class="value">-</div>
-      </div>
+    <div class="result-row">
+      <div class="label">Risk</div>
+      <div id="risk" class="value">-</div>
+    </div>
 
-      <div class="result-row">
-        <div class="label">Confidence</div>
-        <div id="confidence" class="value">-</div>
-      </div>
+    <div class="result-row">
+      <div class="label">Analysis</div>
+      <div id="analysis" class="value">-</div>
+    </div>
 
-      <div class="result-row">
+    <div class="warning">
+      ⚠️ This is an AI estimate based only on information visible
+      in the screenshot. It is not a guaranteed result.
+    </div>
+
+  </div>
+
+  <div class="footer">
+    VirtualPredict AI • AI-assisted screenshot analysis
+  </div>
+
+</div>
+
+<script>
+
+let selectedFile = null;
+
+function handleFile(file) {
+
+  if (!file) {
+    return;
+  }
+
+  if (!file.type || !file.type.startsWith("image/")) {
+
+    document.getElementById("error").textContent =
+      "❌ Please select an image.";
+
+    return;
+  }
+
+  selectedFile = file;
+
+  const preview = document.getElementById("preview");
+  const analyzeButton = document.getElementById("analyzeButton");
+  const selectedText = document.getElementById("selectedText");
+  const status = document.getElementById("status");
+  const errorBox = document.getElementById("error");
+  const resultBox = document.getElementById("result");
+
+  const imageUrl = URL.createObjectURL(file);
+
+  preview.src = imageUrl;
+  preview.style.display = "block";
+
+  selectedText.style.display = "block";
+
+  analyzeButton.style.display = "block";
+  analyzeButton.disabled = false;
+
+  status.textContent = "Screenshot selected. Ready to analyze.";
+
+  errorBox.textContent = "";
+
+  resultBox.style.display = "none";
+
+  preview.scrollIntoView({
+    behavior: "smooth",
+    block: "center"
+  });
+}
+
+
+async function analyzeScreenshot() {
+
+  if (!selectedFile) {
+
+    document.getElementById("error").textContent =
+      "❌ Please select a screenshot first.";
+
+    return;
+  }
+
+  const analyzeButton = document.getElementById("analyzeButton");
+  const status = document.getElementById("status");
+  const errorBox = document.getElementById("error");
+  const resultBox = document.getElementById("result");
+
+  analyzeButton.disabled = true;
+
+  status.textContent = "🔄 Analyzing screenshot...";
+
+  errorBox.textContent = "";
+
+  resultBox.style.display = "none";
+
+  const formData = new FormData();
+
+  formData.append("image", selectedFile);
+
+  try {
+
+    const response = await fetch("/api/analyze", {
+      method: "POST",
+      body: formData
+    });
+
+    let data;
+
+    try {
+
+      data = await response.json();
+
+    } catch (e) {
+
+      throw new Error(
+        "The server returned an invalid response."
+      );
+
+    }
+
+    if (!response.ok) {
+
+      throw new Error(
+        data.error || "The AI analysis failed."
+      );
+
+    }
+
+    document.getElementById("game").textContent =
+      data.game || "Not identified";
+
+    document.getElementById("market").textContent =
+      data.market || "Not identified";
+
+    document.getElementById("prediction").textContent =
+      data.prediction || "No prediction available";
+
+    document.getElementById("confidence").textContent =
+      data.confidence || "Low";
+
+    document.getElementById("alternative").textContent =
+      data.alternative || "None";
+
+    document.getElementById("risk").textContent =
+      data.risk || "High";
+
+    document.getElementById("analysis").textContent =
+      data.analysis || "No analysis available.";
+
+    resultBox.style.display = "block";
+
+    status.textContent = "✅ Analysis complete.";
+
+    resultBox.scrollIntoView({
+      behavior: "smooth",
+      block: "start"
+    });
+
+  } catch (error) {
+
+    console.error(error);
+
+    errorBox.textContent =
+      "❌ " + (error.message || "Unable to analyze screenshot.");
+
+    status.textContent = "";
+
+  } finally {
+
+    analyzeButton.disabled = false;
+
+  }
+
+}
+
+</script>
+
+</body>
+</html>
