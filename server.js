@@ -7,6 +7,10 @@ const app = express();
 
 const PORT = process.env.PORT || 10000;
 
+const client = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY
+});
+
 const upload = multer({
   storage: multer.memoryStorage(),
   limits: {
@@ -14,46 +18,83 @@ const upload = multer({
   }
 });
 
-const apiKey = process.env.OPENAI_API_KEY;
-
-if (!apiKey) {
-  console.warn("OPENAI_API_KEY is not set.");
-}
-
-const client = new OpenAI({
-  apiKey: apiKey
-});
-
 app.use(express.static(path.join(__dirname, "public")));
 
-app.get("/api/health", (req, res) => {
-  res.json({
-    ok: true,
-    apiKeyConfigured: !!apiKey
-  });
+app.get("/", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "index.html"));
 });
 
 app.post("/api/analyze", upload.single("image"), async (req, res) => {
+
   try {
+
     if (!req.file) {
       return res.status(400).json({
         error: "No screenshot was uploaded."
       });
     }
 
-    if (!apiKey) {
+    if (!process.env.OPENAI_API_KEY) {
       return res.status(500).json({
-        error: "OPENAI_API_KEY is not configured."
+        error: "OPENAI_API_KEY is not configured on the server."
       });
     }
 
     const mimeType = req.file.mimetype || "image/jpeg";
+
     const base64Image = req.file.buffer.toString("base64");
 
     const imageDataUrl =
       `data:${mimeType};base64,${base64Image}`;
 
+    const prompt = `
+Analyze this virtual football betting screenshot.
+
+IMPORTANT:
+- Identify EVERY football match that is visibly shown in the screenshot.
+- Do NOT analyze only the first match.
+- Return a prediction for EACH visible match.
+- Read the team names and visible 1X2 odds carefully.
+- If a match is partially visible but the teams can be identified, include it.
+- Do not invent matches that are not visible.
+- Use the visible odds and information in the screenshot.
+- Predictions are estimates, NOT guaranteed results.
+
+For EVERY visible match return:
+
+game
+market
+prediction
+confidence
+alternative
+risk
+odds
+analysis
+
+The "odds" field should contain the visible 1X2 odds when available.
+
+Return ONLY valid JSON in exactly this format:
+
+{
+  "matches": [
+    {
+      "game": "BHA vs ARS",
+      "market": "1X2",
+      "prediction": "ARS to win",
+      "confidence": "Low",
+      "alternative": "Draw",
+      "risk": "High",
+      "odds": "2.80 / 3.54 / 2.44",
+      "analysis": "Brief explanation."
+    }
+  ]
+}
+
+Again: INCLUDE ALL VISIBLE MATCHES, NOT JUST ONE.
+`;
+
     const response = await client.responses.create({
+
       model: "gpt-5.6-luna",
 
       input: [
@@ -62,35 +103,7 @@ app.post("/api/analyze", upload.single("image"), async (req, res) => {
           content: [
             {
               type: "input_text",
-              text: `
-Analyze the uploaded screenshot of a virtual football game.
-
-Use ONLY information that is clearly visible in the screenshot.
-
-Identify:
-- Teams or competitors
-- Visible market
-- Visible odds if available
-- Any clearly visible game information
-
-Give an estimate, NOT a guaranteed result.
-
-Do not invent teams, scores, odds, statistics, previous results, or hidden information.
-
-Return ONLY valid JSON in this exact structure:
-
-{
-  "game": "teams or game shown",
-  "market": "most appropriate market",
-  "prediction": "best estimate",
-  "confidence": "Low, Medium, or High",
-  "alternative": "one alternative estimate",
-  "risk": "Low, Medium, or High",
-  "analysis": "brief explanation based only on what is visible"
-}
-
-If the screenshot is unclear, say so and use Low confidence.
-              `
+              text: prompt
             },
             {
               type: "input_image",
@@ -99,35 +112,60 @@ If the screenshot is unclear, say so and use Low confidence.
           ]
         }
       ]
+
     });
+
+    let text = response.output_text || "";
+
+    text = text
+      .replace(/```json/gi, "")
+      .replace(/```/g, "")
+      .trim();
 
     let result;
 
     try {
-      result = JSON.parse(response.output_text);
-    } catch (parseError) {
-      result = {
-        game: "Unable to identify",
-        market: "Unknown",
-        prediction: response.output_text || "No prediction available",
-        confidence: "Low",
-        alternative: "No reliable alternative",
-        risk: "High",
-        analysis: "The AI response could not be converted into the expected format."
-      };
+
+      result = JSON.parse(text);
+
+    } catch (jsonError) {
+
+      console.error("AI returned invalid JSON:", text);
+
+      return res.status(500).json({
+        error: "The AI returned an invalid analysis response."
+      });
+
     }
 
-    res.json(result);
+    if (!result.matches || !Array.isArray(result.matches)) {
+
+      return res.status(500).json({
+        error: "No match list was returned by the AI."
+      });
+
+    }
+
+    res.json({
+      matches: result.matches
+    });
 
   } catch (error) {
-    console.error("Prediction error:", error);
+
+    console.error("Analysis error:", error);
 
     res.status(500).json({
-      error: error.message || "AI analysis failed."
+      error: error.message || "Unable to analyze screenshot."
     });
+
   }
+
 });
 
 app.listen(PORT, "0.0.0.0", () => {
-  console.log(`VirtualPredict AI running on port ${PORT}`);
+
+  console.log(
+    `VirtualPredict AI running on port ${PORT}`
+  );
+
 });
