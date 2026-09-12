@@ -1,325 +1,332 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <title>VirtualPredict AI</title>
+<meta charset="UTF-8">
 
-  <style>
-    * {
-      box-sizing: border-box;
-    }
+<meta name="viewport"
+      content="width=device-width, initial-scale=1.0">
 
-    body {
-      margin: 0;
-      font-family: Arial, sans-serif;
-      background: #020611;
-      color: white;
-    }
+<title>VirtualPredict AI</title>
 
-    .container {
-      width: 100%;
-      max-width: 700px;
-      margin: auto;
-      padding: 20px;
-    }
+<style>
 
-    .header {
-      text-align: center;
-      padding: 25px 10px;
-    }
+* {
+  box-sizing: border-box;
+}
 
-    .header h1 {
-      margin: 0;
-      font-size: 32px;
-    }
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: #020611;
+  color: white;
+}
 
-    .header p {
-      color: #aeb7c7;
-      margin-top: 8px;
-      font-size: 17px;
-    }
+.container {
+  width: 100%;
+  max-width: 700px;
+  margin: auto;
+  padding: 20px;
+}
 
-    .card {
-      background: #050a17;
-      border: 1px solid #273044;
-      border-radius: 18px;
-      padding: 20px;
-      margin-bottom: 18px;
-    }
+.header {
+  text-align: center;
+  padding: 25px 10px;
+}
 
-    .upload-area {
-      border: 2px dashed #46536e;
-      border-radius: 16px;
-      padding: 25px 15px;
-      text-align: center;
-    }
+.header h1 {
+  margin: 0;
+  font-size: 32px;
+}
 
-    .upload-area h2 {
-      margin-top: 0;
-    }
+.header p {
+  color: #aeb7c7;
+  font-size: 17px;
+}
 
-    .upload-area p {
-      font-size: 16px;
-      line-height: 1.4;
-    }
+.card {
+  background: #050a17;
+  border: 1px solid #273044;
+  border-radius: 18px;
+  padding: 20px;
+  margin-bottom: 18px;
+}
 
-    .buttons {
-      display: flex;
-      gap: 10px;
-      flex-wrap: wrap;
-      justify-content: center;
-      margin-top: 18px;
-    }
+.upload-area {
+  border: 2px dashed #46536e;
+  border-radius: 16px;
+  padding: 25px 15px;
+  text-align: center;
+}
 
-    .upload-button {
-      display: inline-block;
-      background: #263149;
-      color: white;
-      border-radius: 10px;
-      padding: 13px 18px;
-      font-size: 15px;
-      font-weight: bold;
-      cursor: pointer;
-    }
+.buttons {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  margin-top: 18px;
+}
 
-    .upload-button:active {
-      transform: scale(0.97);
-    }
+.upload-button {
+  display: inline-block;
+  background: #263149;
+  color: white;
+  border-radius: 10px;
+  padding: 13px 18px;
+  font-size: 15px;
+  font-weight: bold;
+}
 
-    input[type="file"] {
-      position: absolute;
-      width: 1px;
-      height: 1px;
-      opacity: 0;
-      pointer-events: none;
-    }
+input[type="file"] {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+}
 
-    #preview {
-      width: 100%;
-      max-height: 420px;
-      object-fit: contain;
-      border-radius: 12px;
-      margin-top: 20px;
-      display: none;
-      background: #080b12;
-      border: 1px solid #39445d;
-    }
+#preview {
+  width: 100%;
+  max-height: 420px;
+  object-fit: contain;
+  border-radius: 12px;
+  margin-top: 20px;
+  display: none;
+  background: #080b12;
+}
 
-    #selectedText {
-      display: none;
-      color: #00d084;
-      font-weight: bold;
-      margin-top: 12px;
-    }
+#selectedText {
+  display: none;
+  color: #00d084;
+  font-weight: bold;
+  margin-top: 12px;
+}
 
-    .analyze {
-      width: 100%;
-      margin-top: 18px;
-      font-size: 17px;
-      background: #00a86b;
-      color: white;
-      border: none;
-      border-radius: 10px;
-      padding: 15px;
-      font-weight: bold;
-      cursor: pointer;
-      display: none;
-    }
+.analyze {
+  width: 100%;
+  margin-top: 18px;
+  font-size: 17px;
+  background: #00a86b;
+  color: white;
+  border: none;
+  border-radius: 10px;
+  padding: 15px;
+  font-weight: bold;
+  display: none;
+}
 
-    .analyze:disabled {
-      opacity: 0.6;
-    }
+.analyze:disabled {
+  opacity: 0.6;
+}
 
-    .status {
-      text-align: center;
-      color: #aeb7c7;
-      margin-top: 15px;
-      min-height: 22px;
-    }
+.status {
+  text-align: center;
+  color: #aeb7c7;
+  margin-top: 15px;
+}
 
-    .result {
-      display: none;
-    }
+.error {
+  color: #ff7777;
+  text-align: center;
+  margin-top: 15px;
+}
 
-    .result h2 {
-      margin-top: 0;
-    }
+#results {
+  display: none;
+}
 
-    .result-row {
-      background: #0e1420;
-      border-radius: 10px;
-      padding: 13px;
-      margin: 9px 0;
-    }
+.match-card {
+  background: #0e1420;
+  border: 1px solid #273044;
+  border-radius: 15px;
+  padding: 18px;
+  margin-bottom: 15px;
+}
 
-    .label {
-      color: #8f9bb0;
-      font-size: 13px;
-      margin-bottom: 5px;
-    }
+.match-number {
+  color: #7f8ba3;
+  font-size: 13px;
+  margin-bottom: 8px;
+}
 
-    .value {
-      font-size: 17px;
-      font-weight: bold;
-      word-break: break-word;
-    }
+.match-title {
+  font-size: 21px;
+  font-weight: bold;
+  margin-bottom: 15px;
+}
 
-    .prediction {
-      border: 1px solid #00a86b;
-      background: #09251c;
-    }
+.info {
+  padding: 11px;
+  background: #151c2a;
+  border-radius: 9px;
+  margin: 8px 0;
+}
 
-    .warning {
-      color: #ffcc66;
-      font-size: 13px;
-      line-height: 1.5;
-      margin-top: 15px;
-    }
+.label {
+  color: #8f9bb0;
+  font-size: 12px;
+  margin-bottom: 4px;
+}
 
-    .error {
-      color: #ff7777;
-      text-align: center;
-      margin-top: 15px;
-    }
+.value {
+  font-size: 16px;
+  font-weight: bold;
+}
 
-    .footer {
-      text-align: center;
-      color: #667085;
-      font-size: 12px;
-      padding: 20px 0;
-    }
-  </style>
+.prediction {
+  border: 1px solid #00a86b;
+  background: #09251c;
+}
+
+.warning {
+  color: #ffcc66;
+  font-size: 13px;
+  line-height: 1.5;
+  margin-top: 18px;
+}
+
+.footer {
+  text-align: center;
+  color: #667085;
+  font-size: 12px;
+  padding: 20px 0;
+}
+
+</style>
+
 </head>
 
 <body>
 
 <div class="container">
 
-  <div class="header">
-    <h1>⚽ VirtualPredict AI</h1>
-    <p>Upload a virtual football screenshot for AI analysis</p>
-  </div>
+<div class="header">
 
-  <div class="card">
+<h1>⚽ VirtualPredict AI</h1>
 
-    <div class="upload-area">
-
-      <h2>Upload Screenshot</h2>
-
-      <p>
-        Choose a screenshot from your phone or take a new photo.
-      </p>
-
-      <div class="buttons">
-
-        <label for="galleryInput" class="upload-button">
-          🖼️ Gallery
-        </label>
-
-        <label for="cameraInput" class="upload-button">
-          📷 Camera
-        </label>
-
-      </div>
-
-      <input
-        id="galleryInput"
-        type="file"
-        accept="image/*"
-        onchange="handleFile(this.files[0])"
-      >
-
-      <input
-        id="cameraInput"
-        type="file"
-        accept="image/*"
-        capture="environment"
-        onchange="handleFile(this.files[0])"
-      >
-
-      <div id="selectedText">
-        ✅ Screenshot selected
-      </div>
-
-      <img
-        id="preview"
-        alt="Selected screenshot"
-      >
-
-      <button
-        id="analyzeButton"
-        class="analyze"
-        type="button"
-        onclick="analyzeScreenshot()"
-      >
-        🔍 Analyze Screenshot
-      </button>
-
-      <div id="status" class="status"></div>
-
-      <div id="error" class="error"></div>
-
-    </div>
-
-  </div>
-
-  <div id="result" class="card result">
-
-    <h2>📊 AI Analysis</h2>
-
-    <div class="result-row">
-      <div class="label">Game</div>
-      <div id="game" class="value">-</div>
-    </div>
-
-    <div class="result-row">
-      <div class="label">Market</div>
-      <div id="market" class="value">-</div>
-    </div>
-
-    <div class="result-row prediction">
-      <div class="label">Prediction</div>
-      <div id="prediction" class="value">-</div>
-    </div>
-
-    <div class="result-row">
-      <div class="label">Confidence</div>
-      <div id="confidence" class="value">-</div>
-    </div>
-
-    <div class="result-row">
-      <div class="label">Alternative</div>
-      <div id="alternative" class="value">-</div>
-    </div>
-
-    <div class="result-row">
-      <div class="label">Risk</div>
-      <div id="risk" class="value">-</div>
-    </div>
-
-    <div class="result-row">
-      <div class="label">Analysis</div>
-      <div id="analysis" class="value">-</div>
-    </div>
-
-    <div class="warning">
-      ⚠️ This is an AI estimate based only on information visible
-      in the screenshot. It is not a guaranteed result.
-    </div>
-
-  </div>
-
-  <div class="footer">
-    VirtualPredict AI • AI-assisted screenshot analysis
-  </div>
+<p>
+Upload a virtual football screenshot for AI analysis
+</p>
 
 </div>
+
+
+<div class="card">
+
+<div class="upload-area">
+
+<h2>Upload Screenshot</h2>
+
+<p>
+Choose a screenshot from your phone or take a new photo.
+</p>
+
+
+<div class="buttons">
+
+<label for="galleryInput"
+       class="upload-button">
+
+🖼️ Gallery
+
+</label>
+
+
+<label for="cameraInput"
+       class="upload-button">
+
+📷 Camera
+
+</label>
+
+</div>
+
+
+<input
+id="galleryInput"
+type="file"
+accept="image/*"
+onchange="handleFile(this.files[0])"
+>
+
+
+<input
+id="cameraInput"
+type="file"
+accept="image/*"
+capture="environment"
+onchange="handleFile(this.files[0])"
+>
+
+
+<div id="selectedText">
+
+✅ Screenshot selected
+
+</div>
+
+
+<img
+id="preview"
+alt="Selected screenshot"
+>
+
+
+<button
+id="analyzeButton"
+class="analyze"
+onclick="analyzeScreenshot()"
+>
+
+🔍 Analyze All Matches
+
+</button>
+
+
+<div id="status"
+     class="status">
+</div>
+
+
+<div id="error"
+     class="error">
+</div>
+
+</div>
+
+</div>
+
+
+<div id="results"
+     class="card">
+
+<h2>📊 AI Analysis</h2>
+
+<div id="matches"></div>
+
+<div class="warning">
+
+⚠️ These are AI estimates based on information visible
+in the screenshot. Virtual game results are random and
+cannot be guaranteed.
+
+</div>
+
+</div>
+
+
+<div class="footer">
+
+VirtualPredict AI • AI-assisted screenshot analysis
+
+</div>
+
+</div>
+
 
 <script>
 
 let selectedFile = null;
+
 
 function handleFile(file) {
 
@@ -327,7 +334,7 @@ function handleFile(file) {
     return;
   }
 
-  if (!file.type || !file.type.startsWith("image/")) {
+  if (!file.type.startsWith("image/")) {
 
     document.getElementById("error").textContent =
       "❌ Please select an image.";
@@ -337,33 +344,52 @@ function handleFile(file) {
 
   selectedFile = file;
 
-  const preview = document.getElementById("preview");
-  const analyzeButton = document.getElementById("analyzeButton");
-  const selectedText = document.getElementById("selectedText");
-  const status = document.getElementById("status");
-  const errorBox = document.getElementById("error");
-  const resultBox = document.getElementById("result");
+  const preview =
+    document.getElementById("preview");
 
-  const imageUrl = URL.createObjectURL(file);
+  const analyzeButton =
+    document.getElementById("analyzeButton");
 
-  preview.src = imageUrl;
-  preview.style.display = "block";
+  const selectedText =
+    document.getElementById("selectedText");
 
-  selectedText.style.display = "block";
+  const status =
+    document.getElementById("status");
 
-  analyzeButton.style.display = "block";
-  analyzeButton.disabled = false;
+  const error =
+    document.getElementById("error");
 
-  status.textContent = "Screenshot selected. Ready to analyze.";
+  const results =
+    document.getElementById("results");
 
-  errorBox.textContent = "";
 
-  resultBox.style.display = "none";
+  preview.src =
+    URL.createObjectURL(file);
 
-  preview.scrollIntoView({
-    behavior: "smooth",
-    block: "center"
-  });
+  preview.style.display =
+    "block";
+
+
+  selectedText.style.display =
+    "block";
+
+
+  analyzeButton.style.display =
+    "block";
+
+  analyzeButton.disabled =
+    false;
+
+
+  status.textContent =
+    "Screenshot selected. Ready to analyze all matches.";
+
+
+  error.textContent = "";
+
+  results.style.display =
+    "none";
+
 }
 
 
@@ -377,100 +403,254 @@ async function analyzeScreenshot() {
     return;
   }
 
-  const analyzeButton = document.getElementById("analyzeButton");
-  const status = document.getElementById("status");
-  const errorBox = document.getElementById("error");
-  const resultBox = document.getElementById("result");
 
-  analyzeButton.disabled = true;
+  const button =
+    document.getElementById("analyzeButton");
 
-  status.textContent = "🔄 Analyzing screenshot...";
+  const status =
+    document.getElementById("status");
 
-  errorBox.textContent = "";
+  const error =
+    document.getElementById("error");
 
-  resultBox.style.display = "none";
+  const results =
+    document.getElementById("results");
 
-  const formData = new FormData();
+  const matchesContainer =
+    document.getElementById("matches");
 
-  formData.append("image", selectedFile);
+
+  button.disabled = true;
+
+  status.textContent =
+    "🔄 Analyzing ALL visible matches...";
+
+  error.textContent = "";
+
+  results.style.display =
+    "none";
+
+  matchesContainer.innerHTML = "";
+
+
+  const formData =
+    new FormData();
+
+  formData.append(
+    "image",
+    selectedFile
+  );
+
 
   try {
 
-    const response = await fetch("/api/analyze", {
-      method: "POST",
-      body: formData
-    });
-
-    let data;
-
-    try {
-
-      data = await response.json();
-
-    } catch (e) {
-
-      throw new Error(
-        "The server returned an invalid response."
+    const response =
+      await fetch(
+        "/api/analyze",
+        {
+          method: "POST",
+          body: formData
+        }
       );
 
-    }
+
+    const data =
+      await response.json();
+
 
     if (!response.ok) {
 
       throw new Error(
-        data.error || "The AI analysis failed."
+        data.error ||
+        "The AI analysis failed."
       );
 
     }
 
-    document.getElementById("game").textContent =
-      data.game || "Not identified";
 
-    document.getElementById("market").textContent =
-      data.market || "Not identified";
+    if (!data.matches ||
+        data.matches.length === 0) {
 
-    document.getElementById("prediction").textContent =
-      data.prediction || "No prediction available";
+      throw new Error(
+        "No visible matches were detected."
+      );
 
-    document.getElementById("confidence").textContent =
-      data.confidence || "Low";
+    }
 
-    document.getElementById("alternative").textContent =
-      data.alternative || "None";
 
-    document.getElementById("risk").textContent =
-      data.risk || "High";
+    data.matches.forEach(
+      function(match, index) {
 
-    document.getElementById("analysis").textContent =
-      data.analysis || "No analysis available.";
+        const card =
+          document.createElement("div");
 
-    resultBox.style.display = "block";
+        card.className =
+          "match-card";
 
-    status.textContent = "✅ Analysis complete.";
 
-    resultBox.scrollIntoView({
+        card.innerHTML = `
+
+          <div class="match-number">
+            MATCH ${index + 1}
+          </div>
+
+          <div class="match-title">
+            ⚽ ${escapeHtml(match.game || "Unknown match")}
+          </div>
+
+          <div class="info">
+
+            <div class="label">
+              MARKET
+            </div>
+
+            <div class="value">
+              ${escapeHtml(match.market || "1X2")}
+            </div>
+
+          </div>
+
+
+          <div class="info prediction">
+
+            <div class="label">
+              PREDICTION
+            </div>
+
+            <div class="value">
+              ${escapeHtml(match.prediction || "No prediction")}
+            </div>
+
+          </div>
+
+
+          <div class="info">
+
+            <div class="label">
+              VISIBLE ODDS
+            </div>
+
+            <div class="value">
+              ${escapeHtml(match.odds || "Not available")}
+            </div>
+
+          </div>
+
+
+          <div class="info">
+
+            <div class="label">
+              CONFIDENCE
+            </div>
+
+            <div class="value">
+              ${escapeHtml(match.confidence || "Low")}
+            </div>
+
+          </div>
+
+
+          <div class="info">
+
+            <div class="label">
+              ALTERNATIVE
+            </div>
+
+            <div class="value">
+              ${escapeHtml(match.alternative || "None")}
+            </div>
+
+          </div>
+
+
+          <div class="info">
+
+            <div class="label">
+              RISK
+            </div>
+
+            <div class="value">
+              ${escapeHtml(match.risk || "High")}
+            </div>
+
+          </div>
+
+
+          <div class="info">
+
+            <div class="label">
+              ANALYSIS
+            </div>
+
+            <div class="value">
+              ${escapeHtml(match.analysis || "No analysis available.")}
+            </div>
+
+          </div>
+
+        `;
+
+
+        matchesContainer.appendChild(card);
+
+      }
+    );
+
+
+    results.style.display =
+      "block";
+
+
+    status.textContent =
+      "✅ Analysis complete — " +
+      data.matches.length +
+      " matches found.";
+
+
+    results.scrollIntoView({
       behavior: "smooth",
       block: "start"
     });
 
-  } catch (error) {
 
-    console.error(error);
+  } catch (err) {
 
-    errorBox.textContent =
-      "❌ " + (error.message || "Unable to analyze screenshot.");
+    console.error(err);
+
+    error.textContent =
+      "❌ " +
+      (err.message ||
+       "Unable to analyze screenshot.");
 
     status.textContent = "";
 
   } finally {
 
-    analyzeButton.disabled = false;
+    button.disabled = false;
 
   }
+
+}
+
+
+function escapeHtml(value) {
+
+  return String(value)
+
+    .replace(/&/g, "&amp;")
+
+    .replace(/</g, "&lt;")
+
+    .replace(/>/g, "&gt;")
+
+    .replace(/"/g, "&quot;")
+
+    .replace(/'/g, "&#039;");
 
 }
 
 </script>
 
 </body>
+
 </html>
