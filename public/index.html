@@ -1,133 +1,267 @@
-const express = require("express");
-const multer = require("multer");
-const OpenAI = require("openai");
-const path = require("path");
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-const app = express();
+  <title>VirtualPredict AI</title>
 
-const PORT = process.env.PORT || 10000;
-
-const upload = multer({
-  storage: multer.memoryStorage(),
-  limits: {
-    fileSize: 10 * 1024 * 1024
-  }
-});
-
-const apiKey = process.env.OPENAI_API_KEY;
-
-if (!apiKey) {
-  console.warn("OPENAI_API_KEY is not set.");
-}
-
-const client = new OpenAI({
-  apiKey: apiKey
-});
-
-app.use(express.static(path.join(__dirname, "public")));
-
-app.get("/api/health", (req, res) => {
-  res.json({
-    ok: true,
-    apiKeyConfigured: !!apiKey
-  });
-});
-
-app.post("/api/analyze", upload.single("image"), async (req, res) => {
-  try {
-    if (!req.file) {
-      return res.status(400).json({
-        error: "No screenshot was uploaded."
-      });
+  <style>
+    * {
+      box-sizing: border-box;
     }
 
-    if (!apiKey) {
-      return res.status(500).json({
-        error: "OPENAI_API_KEY is not configured."
-      });
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #0b0f19;
+      color: #ffffff;
     }
 
-    const mimeType = req.file.mimetype || "image/jpeg";
-    const base64Image = req.file.buffer.toString("base64");
-
-    const imageDataUrl =
-      `data:${mimeType};base64,${base64Image}`;
-
-    const response = await client.responses.create({
-      model: "gpt-5.6-luna",
-
-      input: [
-        {
-          role: "user",
-          content: [
-            {
-              type: "input_text",
-              text: `
-Analyze the uploaded screenshot of a virtual football game.
-
-Use ONLY information that is clearly visible in the screenshot.
-
-Identify:
-- Teams or competitors
-- Visible market
-- Visible odds if available
-- Any clearly visible game information
-
-Give an estimate, NOT a guaranteed result.
-
-Do not invent teams, scores, odds, statistics, previous results, or hidden information.
-
-Return ONLY valid JSON in this exact structure:
-
-{
-  "game": "teams or game shown",
-  "market": "most appropriate market",
-  "prediction": "best estimate",
-  "confidence": "Low, Medium, or High",
-  "alternative": "one alternative estimate",
-  "risk": "Low, Medium, or High",
-  "analysis": "brief explanation based only on what is visible"
-}
-
-If the screenshot is unclear, say so and use Low confidence.
-              `
-            },
-            {
-              type: "input_image",
-              image_url: imageDataUrl
-            }
-          ]
-        }
-      ]
-    });
-
-    let result;
-
-    try {
-      result = JSON.parse(response.output_text);
-    } catch (parseError) {
-      result = {
-        game: "Unable to identify",
-        market: "Unknown",
-        prediction: response.output_text || "No prediction available",
-        confidence: "Low",
-        alternative: "No reliable alternative",
-        risk: "High",
-        analysis: "The AI response could not be converted into the expected format."
-      };
+    .container {
+      width: 100%;
+      max-width: 700px;
+      margin: auto;
+      padding: 20px;
     }
 
-    res.json(result);
+    .header {
+      text-align: center;
+      padding: 25px 10px;
+    }
 
-  } catch (error) {
-    console.error("Prediction error:", error);
+    .header h1 {
+      margin: 0;
+      font-size: 32px;
+    }
 
-    res.status(500).json({
-      error: error.message || "AI analysis failed."
-    });
-  }
-});
+    .header p {
+      color: #aeb7c7;
+      margin-top: 8px;
+    }
 
-app.listen(PORT, "0.0.0.0", () => {
-  console.log(`VirtualPredict AI running on port ${PORT}`);
-});
+    .card {
+      background: #151b28;
+      border: 1px solid #273044;
+      border-radius: 18px;
+      padding: 20px;
+      margin-bottom: 18px;
+    }
+
+    .upload-area {
+      border: 2px dashed #46536e;
+      border-radius: 16px;
+      padding: 25px 15px;
+      text-align: center;
+    }
+
+    .upload-area h2 {
+      margin-top: 0;
+    }
+
+    .buttons {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content: center;
+      margin-top: 18px;
+    }
+
+    button {
+      border: none;
+      border-radius: 10px;
+      padding: 13px 18px;
+      font-size: 15px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .primary {
+      background: #6c5ce7;
+      color: white;
+    }
+
+    .secondary {
+      background: #263149;
+      color: white;
+    }
+
+    button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    input[type="file"] {
+      display: none;
+    }
+
+    #preview {
+      width: 100%;
+      max-height: 400px;
+      object-fit: contain;
+      border-radius: 12px;
+      margin-top: 20px;
+      display: none;
+      background: #080b12;
+    }
+
+    .analyze {
+      width: 100%;
+      margin-top: 18px;
+      font-size: 17px;
+      background: #00a86b;
+      color: white;
+    }
+
+    .status {
+      text-align: center;
+      color: #aeb7c7;
+      margin-top: 15px;
+      min-height: 22px;
+    }
+
+    .result {
+      display: none;
+    }
+
+    .result h2 {
+      margin-top: 0;
+    }
+
+    .result-row {
+      background: #0e1420;
+      border-radius: 10px;
+      padding: 13px;
+      margin: 9px 0;
+    }
+
+    .label {
+      color: #8f9bb0;
+      font-size: 13px;
+      margin-bottom: 5px;
+    }
+
+    .value {
+      font-size: 17px;
+      font-weight: bold;
+      word-break: break-word;
+    }
+
+    .prediction {
+      border: 1px solid #00a86b;
+      background: #09251c;
+    }
+
+    .warning {
+      color: #ffcc66;
+      font-size: 13px;
+      line-height: 1.5;
+      margin-top: 15px;
+    }
+
+    .error {
+      color: #ff7777;
+      text-align: center;
+      margin-top: 15px;
+    }
+
+    .footer {
+      text-align: center;
+      color: #667085;
+      font-size: 12px;
+      padding: 20px 0;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="container">
+
+    <div class="header">
+      <h1>⚽ VirtualPredict AI</h1>
+      <p>Upload a virtual football screenshot for AI analysis</p>
+    </div>
+
+    <div class="card">
+
+      <div class="upload-area">
+
+        <h2>Upload Screenshot</h2>
+
+        <p>
+          Choose a screenshot from your phone or take a new photo.
+        </p>
+
+        <div class="buttons">
+
+          <button
+            class="secondary"
+            type="button"
+            onclick="document.getElementById('galleryInput').click()">
+            🖼️ Gallery
+          </button>
+
+          <button
+            class="secondary"
+            type="button"
+            onclick="document.getElementById('cameraInput').click()">
+            📷 Camera
+          </button>
+
+        </div>
+
+        <input
+          id="galleryInput"
+          type="file"
+          accept="image/*">
+
+        <input
+          id="cameraInput"
+          type="file"
+          accept="image/*"
+          capture="environment">
+
+        <img id="preview" alt="Screenshot preview">
+
+        <button
+          id="analyzeButton"
+          class="analyze"
+          type="button"
+          disabled>
+          🔍 Analyze Screenshot
+        </button>
+
+        <div id="status" class="status"></div>
+
+        <div id="error" class="error"></div>
+
+      </div>
+
+    </div>
+
+    <div id="result" class="card result">
+
+      <h2>📊 AI Analysis</h2>
+
+      <div class="result-row">
+        <div class="label">Game</div>
+        <div id="game" class="value">-</div>
+      </div>
+
+      <div class="result-row">
+        <div class="label">Market</div>
+        <div id="market" class="value">-</div>
+      </div>
+
+      <div class="result-row prediction">
+        <div class="label">Prediction</div>
+        <div id="prediction" class="value">-</div>
+      </div>
+
+      <div class="result-row">
+        <div class="label">Confidence</div>
+        <div id="confidence" class="value">-</div>
+      </div>
+
+      <div class="result-row">
