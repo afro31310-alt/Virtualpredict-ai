@@ -1,117 +1,116 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<meta name="theme-color" content="#080d18">
-<title>VirtualPredict AI</title>
+const express = require("express");
+const multer = require("multer");
+const OpenAI = require("openai");
+const path = require("path");
 
-<style>
-*{box-sizing:border-box}
+const app = express();
 
-body{
-  margin:0;
-  font-family:Arial,sans-serif;
-  background:#080d18;
-  color:#fff;
-  min-height:100vh
+const PORT = process.env.PORT || 10000;
+
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: {
+    fileSize: 10 * 1024 * 1024
+  }
+});
+
+const apiKey = process.env.OPENAI_API_KEY;
+
+if (!apiKey) {
+  console.warn("WARNING: OPENAI_API_KEY is not set.");
 }
 
-.container{
-  max-width:680px;
-  margin:auto;
-  padding:20px
-}
+const client = new OpenAI({
+  apiKey: apiKey
+});
 
-h1{
-  margin:8px 0 6px;
-  font-size:30px
-}
+app.use(express.static(path.join(__dirname, "public")));
 
-.sub{
-  color:#aeb8cc;
-  margin:0 0 22px;
-  line-height:1.5
-}
+app.get("/api/health", (req, res) => {
+  res.json({
+    ok: true,
+    apiKeyConfigured: !!apiKey
+  });
+});
 
-.card{
-  background:#111827;
-  border:1px solid #263149;
-  border-radius:18px;
-  padding:18px;
-  margin-bottom:16px
-}
+app.post("/api/analyze", upload.single("image"), async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({
+        error: "No image was uploaded."
+      });
+    }
 
-.upload-box{
-  display:flex;
-  flex-direction:column;
-  align-items:center;
-  justify-content:center;
-  min-height:180px;
-  border:2px dashed #53617c;
-  border-radius:16px;
-  background:#0c1322;
-  text-align:center;
-  padding:22px;
-  cursor:pointer
-}
+    if (!apiKey) {
+      return res.status(500).json({
+        error: "OPENAI_API_KEY is not configured on the server."
+      });
+    }
 
-.icon{
-  font-size:44px;
-  margin-bottom:10px
-}
+    const mimeType = req.file.mimetype || "image/jpeg";
 
-.upload-title{
-  font-size:18px;
-  font-weight:700
-}
+    const imageBase64 = req.file.buffer.toString("base64");
 
-.upload-help{
-  color:#9da8bc;
-  font-size:14px;
-  margin-top:7px
-}
+    const imageDataUrl =
+      `data:${mimeType};base64,${imageBase64}`;
 
-.actions{
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:10px;
-  margin-top:12px
-}
+    const response = await client.responses.create({
+      model: "gpt-5.6-luna",
+      input: [
+        {
+          role: "user",
+          content: [
+            {
+              type: "input_text",
+              text: `
+You are an image-analysis assistant for a virtual football game screenshot.
 
-.action{
-  border:0;
-  border-radius:12px;
-  padding:14px 10px;
-  font-size:15px;
-  font-weight:700;
-  cursor:pointer;
-  text-align:center
-}
+Analyze ONLY what is visibly shown in the uploaded screenshot.
 
-.camera{
-  background:#2563eb;
-  color:#fff
-}
+If multiple games or matches are visible, identify the game that is most clearly shown and give ONE prediction for that game.
 
-.gallery{
-  background:#263149;
-  color:#fff
-}
+Do NOT claim that the result is guaranteed.
+Do NOT invent teams, scores, odds, statistics, or information that cannot be seen.
 
-.analyze{
-  width:100%;
-  margin-top:14px;
-  border:0;
-  border-radius:12px;
-  padding:15px;
-  background:#16a34a;
-  color:#fff;
-  font-size:17px;
-  font-weight:700;
-  cursor:pointer
-}
+Return your answer in this format:
 
-.analyze:disabled{
-  opacity:.5;
-  cursor:not-
+Game: [teams/game shown]
+Market: [most appropriate visible market]
+Prediction: [your best estimate]
+Confidence: [Low / Medium / High]
+Alternative: [one alternative estimate]
+Risk: [Low / Medium / High]
+Analysis: [brief explanation based only on visible information]
+
+If the screenshot does not contain enough information for a meaningful prediction, say so clearly.
+              `
+            },
+            {
+              type: "input_image",
+              image_url: imageDataUrl
+            }
+          ]
+        }
+      ]
+    });
+
+    const text = response.output_text || "";
+
+    res.json({
+      success: true,
+      prediction: text
+    });
+
+  } catch (error) {
+    console.error("Prediction error:", error);
+
+    res.status(500).json({
+      error: "Unable to analyze the screenshot.",
+      details: error.message
+    });
+  }
+});
+
+app.listen(PORT, "0.0.0.0", () => {
+  console.log(`VirtualPredict AI running on port ${PORT}`);
+});
