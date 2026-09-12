@@ -2,127 +2,116 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="theme-color" content="#080d18">
 <title>VirtualPredict AI</title>
+
 <style>
-*{box-sizing:border-box}body{margin:0;background:#080d18;color:#fff;font-family:Arial,sans-serif}
-.wrap{max-width:620px;margin:auto;padding:20px}.card{background:#111827;border:1px solid #263149;border-radius:18px;padding:18px;margin-bottom:16px}
-h1{font-size:29px;margin:5px 0}.sub{color:#aeb8cc;line-height:1.5;margin:0 0 20px}
-.upload{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:180px;border:2px dashed #53617c;border-radius:16px;background:#0c1322;text-align:center;padding:20px;cursor:pointer}
-.upload:active{transform:scale(.99)}.icon{font-size:44px}.title{font-size:18px;font-weight:bold;margin-top:8px}.help{font-size:14px;color:#9da8bc;margin-top:7px}
-.actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
-.action{padding:14px;border-radius:12px;text-align:center;font-weight:bold;cursor:pointer}
-.camera{background:#2563eb}.gallery{background:#263149}
-input[type=file]{position:absolute;width:1px;height:1px;opacity:0;overflow:hidden;pointer-events:none}
-.preview{display:none;text-align:center;margin-top:15px}.preview img{max-width:100%;max-height:360px;border-radius:14px}
-.name{font-size:13px;color:#aeb8cc;margin-top:8px;word-break:break-word}
-.analyze{width:100%;border:0;border-radius:13px;padding:16px;margin-top:14px;background:#16a34a;color:#fff;font-size:17px;font-weight:bold}
-.analyze:disabled{opacity:.5}.status{display:none;padding:12px;margin-top:12px;border-radius:10px;background:#172033;color:#d8deea}
-.error{background:#351a20;color:#fecaca}.result{display:none}.row{display:flex;justify-content:space-between;padding:12px 0;border-bottom:1px solid #273247;gap:15px}
-.label{color:#9da8bc}.value{font-weight:bold;text-align:right}.pred{font-size:24px;color:#4ade80}.analysis{line-height:1.55;color:#d5dbea}
-.note{font-size:12px;color:#8995aa;line-height:1.5;margin-top:15px}
-</style>
-</head>
-<body>
-<div class="wrap">
-  <div class="card">
-    <h1>⚽ VirtualPredict AI</h1>
-    <p class="sub">Upload a screenshot of your instant virtual game for an AI-based estimate of the visible market.</p>
+*{box-sizing:border-box}
 
-    <label class="upload" for="galleryInput">
-      <div class="icon">🖼️</div>
-      <div class="title">Tap here to upload a screenshot</div>
-      <div class="help">Choose an image from your phone gallery</div>
-    </label>
-
-    <input id="galleryInput" type="file" accept="image/*">
-
-    <div class="actions">
-      <label class="action camera">📷 Take Photo
-        <input id="cameraInput" type="file" accept="image/*" capture="environment">
-      </label>
-      <label class="action gallery" for="galleryInput">🖼️ Gallery</label>
-    </div>
-
-    <div id="preview" class="preview">
-      <img id="previewImage" alt="Game screenshot preview">
-      <div id="fileName" class="name"></div>
-    </div>
-
-    <button id="analyzeBtn" class="analyze" disabled>Analyze Screenshot</button>
-    <div id="status" class="status"></div>
-  </div>
-
-  <div id="result" class="card result">
-    <h2 style="margin-top:0">Prediction Result</h2>
-    <div class="row"><span class="label">Prediction</span><span id="prediction" class="value pred">—</span></div>
-    <div class="row"><span class="label">Confidence</span><span id="confidence" class="value">—</span></div>
-    <div class="row"><span class="label">Alternative</span><span id="alternative" class="value">—</span></div>
-    <div class="row"><span class="label">Risk</span><span id="risk" class="value">—</span></div>
-    <div style="margin-top:15px"><div class="label">Analysis</div><p id="analysis" class="analysis">—</p></div>
-    <div class="note">This is an AI estimate from the screenshot. Random virtual-game outcomes cannot be guaranteed.</div>
-  </div>
-</div>
-
-<script>
-const gallery=document.getElementById('galleryInput');
-const camera=document.getElementById('cameraInput');
-const preview=document.getElementById('preview');
-const previewImage=document.getElementById('previewImage');
-const fileName=document.getElementById('fileName');
-const analyze=document.getElementById('analyzeBtn');
-const status=document.getElementById('status');
-const result=document.getElementById('result');
-let selectedFile=null;
-
-function msg(text,error=false){
-  status.textContent=text;
-  status.className='status'+(error?' error':'');
-  status.style.display='block';
+body{
+  margin:0;
+  font-family:Arial,sans-serif;
+  background:#080d18;
+  color:#fff;
+  min-height:100vh
 }
-function choose(file){
-  if(!file)return;
-  if(!file.type.startsWith('image/')){msg('Please choose an image.',true);return;}
-  selectedFile=file;
-  fileName.textContent=file.name||'Selected image';
-  const reader=new FileReader();
-  reader.onload=e=>{
-    previewImage.src=e.target.result;
-    preview.style.display='block';
-    analyze.disabled=false;
-    result.style.display='none';
-    msg('Screenshot ready. Tap “Analyze Screenshot”.');
-  };
-  reader.readAsDataURL(file);
-}
-gallery.addEventListener('change',()=>choose(gallery.files[0]));
-camera.addEventListener('change',()=>choose(camera.files[0]));
 
-analyze.addEventListener('click',async()=>{
-  if(!selectedFile)return;
-  analyze.disabled=true;
-  msg('Analyzing screenshot…');
-  const fd=new FormData();
-  fd.append('image',selectedFile);
-  try{
-    const r=await fetch('/api/analyze',{method:'POST',body:fd});
-    const type=r.headers.get('content-type')||'';
-    if(!type.includes('application/json')) throw new Error('Prediction server is not connected.');
-    const d=await r.json();
-    if(!r.ok)throw new Error(d.error||'Analysis failed.');
-    document.getElementById('prediction').textContent=d.prediction||'—';
-    document.getElementById('confidence').textContent=d.confidence||'—';
-    document.getElementById('alternative').textContent=d.alternative||'—';
-    document.getElementById('risk').textContent=d.risk||'—';
-    document.getElementById('analysis').textContent=d.analysis||'—';
-    result.style.display='block';
-    msg('Analysis complete.');
-    result.scrollIntoView({behavior:'smooth'});
-  }catch(e){
-    msg(e.message||'Could not connect to the prediction server.',true);
-  }finally{analyze.disabled=false}
-});
-</script>
-</body>
-</html>
+.container{
+  max-width:680px;
+  margin:auto;
+  padding:20px
+}
+
+h1{
+  margin:8px 0 6px;
+  font-size:30px
+}
+
+.sub{
+  color:#aeb8cc;
+  margin:0 0 22px;
+  line-height:1.5
+}
+
+.card{
+  background:#111827;
+  border:1px solid #263149;
+  border-radius:18px;
+  padding:18px;
+  margin-bottom:16px
+}
+
+.upload-box{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  min-height:180px;
+  border:2px dashed #53617c;
+  border-radius:16px;
+  background:#0c1322;
+  text-align:center;
+  padding:22px;
+  cursor:pointer
+}
+
+.icon{
+  font-size:44px;
+  margin-bottom:10px
+}
+
+.upload-title{
+  font-size:18px;
+  font-weight:700
+}
+
+.upload-help{
+  color:#9da8bc;
+  font-size:14px;
+  margin-top:7px
+}
+
+.actions{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px;
+  margin-top:12px
+}
+
+.action{
+  border:0;
+  border-radius:12px;
+  padding:14px 10px;
+  font-size:15px;
+  font-weight:700;
+  cursor:pointer;
+  text-align:center
+}
+
+.camera{
+  background:#2563eb;
+  color:#fff
+}
+
+.gallery{
+  background:#263149;
+  color:#fff
+}
+
+.analyze{
+  width:100%;
+  margin-top:14px;
+  border:0;
+  border-radius:12px;
+  padding:15px;
+  background:#16a34a;
+  color:#fff;
+  font-size:17px;
+  font-weight:700;
+  cursor:pointer
+}
+
+.analyze:disabled{
+  opacity:.5;
+  cursor:not-
