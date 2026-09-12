@@ -17,7 +17,7 @@ const upload = multer({
 const apiKey = process.env.OPENAI_API_KEY;
 
 if (!apiKey) {
-  console.warn("WARNING: OPENAI_API_KEY is not set.");
+  console.warn("OPENAI_API_KEY is not set.");
 }
 
 const client = new OpenAI({
@@ -37,25 +37,25 @@ app.post("/api/analyze", upload.single("image"), async (req, res) => {
   try {
     if (!req.file) {
       return res.status(400).json({
-        error: "No image was uploaded."
+        error: "No screenshot was uploaded."
       });
     }
 
     if (!apiKey) {
       return res.status(500).json({
-        error: "OPENAI_API_KEY is not configured on the server."
+        error: "OPENAI_API_KEY is not configured."
       });
     }
 
     const mimeType = req.file.mimetype || "image/jpeg";
-
-    const imageBase64 = req.file.buffer.toString("base64");
+    const base64Image = req.file.buffer.toString("base64");
 
     const imageDataUrl =
-      `data:${mimeType};base64,${imageBase64}`;
+      `data:${mimeType};base64,${base64Image}`;
 
     const response = await client.responses.create({
       model: "gpt-5.6-luna",
+
       input: [
         {
           role: "user",
@@ -63,26 +63,33 @@ app.post("/api/analyze", upload.single("image"), async (req, res) => {
             {
               type: "input_text",
               text: `
-You are an image-analysis assistant for a virtual football game screenshot.
+Analyze the uploaded screenshot of a virtual football game.
 
-Analyze ONLY what is visibly shown in the uploaded screenshot.
+Use ONLY information that is clearly visible in the screenshot.
 
-If multiple games or matches are visible, identify the game that is most clearly shown and give ONE prediction for that game.
+Identify:
+- Teams or competitors
+- Visible market
+- Visible odds if available
+- Any clearly visible game information
 
-Do NOT claim that the result is guaranteed.
-Do NOT invent teams, scores, odds, statistics, or information that cannot be seen.
+Give an estimate, NOT a guaranteed result.
 
-Return your answer in this format:
+Do not invent teams, scores, odds, statistics, previous results, or hidden information.
 
-Game: [teams/game shown]
-Market: [most appropriate visible market]
-Prediction: [your best estimate]
-Confidence: [Low / Medium / High]
-Alternative: [one alternative estimate]
-Risk: [Low / Medium / High]
-Analysis: [brief explanation based only on visible information]
+Return ONLY valid JSON in this exact structure:
 
-If the screenshot does not contain enough information for a meaningful prediction, say so clearly.
+{
+  "game": "teams or game shown",
+  "market": "most appropriate market",
+  "prediction": "best estimate",
+  "confidence": "Low, Medium, or High",
+  "alternative": "one alternative estimate",
+  "risk": "Low, Medium, or High",
+  "analysis": "brief explanation based only on what is visible"
+}
+
+If the screenshot is unclear, say so and use Low confidence.
               `
             },
             {
@@ -94,19 +101,29 @@ If the screenshot does not contain enough information for a meaningful predictio
       ]
     });
 
-    const text = response.output_text || "";
+    let result;
 
-    res.json({
-      success: true,
-      prediction: text
-    });
+    try {
+      result = JSON.parse(response.output_text);
+    } catch (parseError) {
+      result = {
+        game: "Unable to identify",
+        market: "Unknown",
+        prediction: response.output_text || "No prediction available",
+        confidence: "Low",
+        alternative: "No reliable alternative",
+        risk: "High",
+        analysis: "The AI response could not be converted into the expected format."
+      };
+    }
+
+    res.json(result);
 
   } catch (error) {
     console.error("Prediction error:", error);
 
     res.status(500).json({
-      error: "Unable to analyze the screenshot.",
-      details: error.message
+      error: error.message || "AI analysis failed."
     });
   }
 });
