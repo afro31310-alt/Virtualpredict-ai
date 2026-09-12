@@ -4,62 +4,130 @@ const OpenAI = require("openai");
 const path = require("path");
 
 const app = express();
-const port = process.env.PORT || 10000;
+
+const PORT = process.env.PORT || 10000;
 
 const upload = multer({
   storage: multer.memoryStorage(),
-  limits: { fileSize: 10 * 1024 * 1024 }
+  limits: {
+    fileSize: 10 * 1024 * 1024
+  }
 });
 
+const apiKey = process.env.OPENAI_API_KEY;
+
+if (!apiKey) {
+  console.warn("OPENAI_API_KEY is not set.");
+}
+
 const client = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY
+  apiKey: apiKey
 });
 
 app.use(express.static(path.join(__dirname, "public")));
 
 app.get("/api/health", (req, res) => {
-  res.json({ ok: true });
+  res.json({
+    ok: true,
+    apiKeyConfigured: !!apiKey
+  });
 });
 
 app.post("/api/analyze", upload.single("image"), async (req, res) => {
   try {
-    if (!process.env.OPENAI_API_KEY) {
-      return res.status(500).json({
-        error: "OPENAI_API_KEY is not configured on the server."
-      });
-    }
-
     if (!req.file) {
       return res.status(400).json({
-        error: "Please upload a screenshot."
+        error: "No screenshot was uploaded."
       });
     }
 
-    const base64 = req.file.buffer.toString("base64");
-    const mime = req.file.mimetype || "image/jpeg";
+    if (!apiKey) {
+      return res.status(500).json({
+        error: "OPENAI_API_KEY is not configured."
+      });
+    }
 
-    const prompt = `
-Analyze this screenshot of an instant/virtual football game.
+    const mimeType = req.file.mimetype || "image/jpeg";
+    const base64Image = req.file.buffer.toString("base64");
 
-IMPORTANT:
-- Detect EVERY clearly visible game/match in the screenshot, not just one.
-- Create one prediction object for EACH visible game.
-- Do not invent teams, scores, odds, markets, or other information that is not visible.
-- If a game is too unclear to identify, do not invent details.
-- Virtual-game results can be random. Do NOT claim certainty or guaranteed wins.
-- Confidence must be an estimate from 0 to 100.
-- Keep each analysis short and based only on visible information.
+    const imageDataUrl =
+      `data:${mimeType};base64,${base64Image}`;
 
-Return ONLY valid JSON in exactly this structure:
+    const response = await client.responses.create({
+      model: "gpt-5.6-luna",
+
+      input: [
+        {
+          role: "user",
+          content: [
+            {
+              type: "input_text",
+              text: `
+Analyze the uploaded screenshot of a virtual football game.
+
+Use ONLY information that is clearly visible in the screenshot.
+
+Identify:
+- Teams or competitors
+- Visible market
+- Visible odds if available
+- Any clearly visible game information
+
+Give an estimate, NOT a guaranteed result.
+
+Do not invent teams, scores, odds, statistics, previous results, or hidden information.
+
+Return ONLY valid JSON in this exact structure:
 
 {
-  "games": [
-    {
-      "game": "Game 1",
-      "teams": "Home Team vs Away Team",
-      "market": "1X2 / Over-Under / BTTS / other visible market",
-      "prediction": "your best estimate",
-      "confidence": 0,
-      "alternative": "safer alternative if supported",
-      "risk": "Low / Medium / High",
-      "analysis
+  "game": "teams or game shown",
+  "market": "most appropriate market",
+  "prediction": "best estimate",
+  "confidence": "Low, Medium, or High",
+  "alternative": "one alternative estimate",
+  "risk": "Low, Medium, or High",
+  "analysis": "brief explanation based only on what is visible"
+}
+
+If the screenshot is unclear, say so and use Low confidence.
+              `
+            },
+            {
+              type: "input_image",
+              image_url: imageDataUrl
+            }
+          ]
+        }
+      ]
+    });
+
+    let result;
+
+    try {
+      result = JSON.parse(response.output_text);
+    } catch (parseError) {
+      result = {
+        game: "Unable to identify",
+        market: "Unknown",
+        prediction: response.output_text || "No prediction available",
+        confidence: "Low",
+        alternative: "No reliable alternative",
+        risk: "High",
+        analysis: "The AI response could not be converted into the expected format."
+      };
+    }
+
+    res.json(result);
+
+  } catch (error) {
+    console.error("Prediction error:", error);
+
+    res.status(500).json({
+      error: error.message || "AI analysis failed."
+    });
+  }
+});
+
+app.listen(PORT, "0.0.0.0", () => {
+  console.log(`VirtualPredict AI running on port ${PORT}`);
+});
