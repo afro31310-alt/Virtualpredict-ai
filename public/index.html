@@ -2,283 +2,309 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-<title>SportyPredict AI</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>VirtualPredict AI</title>
 
 <style>
-* {
-  box-sizing: border-box;
+*{box-sizing:border-box}
+body{
+margin:0;background:#020611;color:#fff;
+font-family:Arial,sans-serif
 }
-
-body {
-  margin: 0;
-  font-family: Arial, sans-serif;
-  background: #020611;
-  color: white;
+.wrap{max-width:720px;margin:auto;padding:18px}
+header{text-align:center;padding:25px 5px}
+header h1{font-size:32px;margin:5px 0}
+header p{color:#9da8bc;line-height:1.5}
+.card{
+background:#080e1b;border:1px solid #29344a;
+border-radius:18px;padding:20px;margin-bottom:18px
 }
-
-.container {
-  width: 100%;
-  max-width: 720px;
-  margin: auto;
-  padding: 18px;
+h2{margin-top:0}
+label.title{
+display:block;color:#aeb7c7;margin-bottom:8px;font-size:14px
 }
-
-.header {
-  text-align: center;
-  padding: 28px 10px;
+input[type=tel]{
+width:100%;padding:14px;border-radius:10px;
+border:1px solid #39445d;background:#111a2a;
+color:#fff;font-size:16px
 }
-
-.logo {
-  font-size: 42px;
+.note{font-size:12px;color:#77849a;margin-top:8px}
+.upload{
+border:2px dashed #46536e;border-radius:16px;
+padding:24px 14px;text-align:center
 }
-
-.header h1 {
-  margin: 5px 0;
-  font-size: 32px;
+.filebtn{
+display:inline-block;background:#293550;color:#fff;
+padding:14px 20px;border-radius:11px;
+font-weight:bold;margin:5px;cursor:pointer
 }
-
-.header p {
-  color: #9da8bc;
-  font-size: 16px;
-  line-height: 1.5;
+input[type=file]{
+position:absolute;width:1px;height:1px;opacity:0
 }
-
-.card {
-  background: #070d1b;
-  border: 1px solid #263149;
-  border-radius: 20px;
-  padding: 20px;
-  margin-bottom: 18px;
+#selected{
+display:none;color:#00d084;font-weight:bold;margin:14px
 }
-
-.section-title {
-  font-size: 21px;
-  font-weight: bold;
-  margin-bottom: 18px;
+#preview{
+display:none;width:100%;max-height:430px;
+object-fit:contain;border-radius:12px;margin-top:15px
 }
-
-.input-label {
-  display: block;
-  color: #aeb7c7;
-  font-size: 14px;
-  margin-bottom: 8px;
+#analyze{
+display:none;width:100%;padding:16px;margin-top:17px;
+border:0;border-radius:11px;background:#00a86b;
+color:#fff;font-size:17px;font-weight:bold
 }
-
-.phone-input {
-  width: 100%;
-  padding: 15px;
-  border-radius: 11px;
-  border: 1px solid #39445d;
-  background: #101827;
-  color: white;
-  font-size: 16px;
-  outline: none;
+#analyze:disabled{opacity:.55}
+#status{text-align:center;color:#aeb7c7;margin-top:14px}
+#error{text-align:center;color:#ff7777;margin-top:10px}
+#results{display:none}
+.match{
+background:#101827;border:1px solid #29354c;
+border-radius:14px;padding:16px;margin:12px 0
 }
-
-.phone-input:focus {
-  border-color: #00b978;
+.match h3{margin:0 0 14px;font-size:20px}
+.row{
+background:#172131;border-radius:9px;
+padding:10px;margin:7px 0
 }
-
-.phone-note {
-  color: #707c91;
-  font-size: 12px;
-  line-height: 1.5;
-  margin-top: 8px;
+.row small{display:block;color:#8995aa;margin-bottom:4px}
+.pred{
+background:#08291e;border:1px solid #00a86b
 }
-
-.upload-area {
-  border: 2px dashed #46536e;
-  border-radius: 17px;
-  padding: 25px 15px;
-  text-align: center;
-}
-
-.upload-icon {
-  font-size: 45px;
-}
-
-.upload-area h2 {
-  margin: 8px 0;
-}
-
-.upload-area p {
-  color: #aeb7c7;
-  line-height: 1.5;
-}
-
-.buttons {
-  display: flex;
-  gap: 10px;
-  justify-content: center;
-  flex-wrap: wrap;
-  margin-top: 20px;
-}
-
-.upload-button {
-  display: inline-block;
-  background: #27324d;
-  color: white;
-  border-radius: 11px;
-  padding: 14px 20px;
-  font-weight: bold;
-  cursor: pointer;
-}
-
-.upload-button:active {
-  transform: scale(0.97);
-}
-
-input[type="file"] {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  opacity: 0;
-}
-
-#selectedText {
-  display: none;
-  color: #00d084;
-  font-weight: bold;
-  margin-top: 15px;
-}
-
-#preview {
-  display: none;
-  width: 100%;
-  max-height: 450px;
-  object-fit: contain;
-  border-radius: 14px;
-  margin-top: 18px;
-  background: #02050b;
-  border: 1px solid #39445d;
-}
-
-.analyze-button {
-  display: none;
-  width: 100%;
-  margin-top: 18px;
-  padding: 16px;
-  border: none;
-  border-radius: 12px;
-  background: #00a86b;
-  color: white;
-  font-size: 17px;
-  font-weight: bold;
-  cursor: pointer;
-}
-
-.analyze-button:disabled {
-  opacity: 0.55;
-}
-
-.status {
-  text-align: center;
-  margin-top: 15px;
-  color: #aeb7c7;
-  min-height: 22px;
-}
-
-.error {
-  color: #ff7777;
-  text-align: center;
-  margin-top: 12px;
-}
-
-#results {
-  display: none;
-}
-
-.results-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 15px;
-}
-
-.match-count {
-  background: #123b2c;
-  color: #00d084;
-  padding: 8px 11px;
-  border-radius: 20px;
-  font-size: 12px;
-  font-weight: bold;
-}
-
-.match-card {
-  background: #0d1422;
-  border: 1px solid #29354c;
-  border-radius: 16px;
-  padding: 17px;
-  margin-bottom: 15px;
-}
-
-.match-number {
-  color: #77849b;
-  font-size: 12px;
-  font-weight: bold;
-  margin-bottom: 8px;
-}
-
-.match-title {
-  font-size: 21px;
-  font-weight: bold;
-  margin-bottom: 15px;
-}
-
-.info {
-  background: #151d2c;
-  border-radius: 10px;
-  padding: 11px;
-  margin-top: 8px;
-}
-
-.info-label {
-  color: #8995aa;
-  font-size: 12px;
-  margin-bottom: 5px;
-}
-
-.info-value {
-  font-size: 16px;
-  font-weight: bold;
-}
-
-.prediction {
-  background: #08271d;
-  border: 1px solid #00a86b;
-}
-
-.prediction .info-label {
-  color: #55d9a9;
-}
-
-.confidence {
-  display: inline-block;
-  margin-top: 10px;
-  background: #263149;
-  border-radius: 8px;
-  padding: 7px 10px;
-  font-size: 13px;
-}
-
-.warning {
-  margin-top: 20px;
-  padding: 13px;
-  border-radius: 10px;
-  background: #211b0b;
-  color: #ffd36a;
-  font-size: 13px;
-  line-height: 1.5;
-}
-
-.footer {
-  text-align: center;
-  color: #667085;
-  font-size: 12px;
-  padding: 25px 0;
+.warn{
+color:#ffd36a;background:#211b0b;
+padding:12px;border-radius:9px;
+font-size:12px;line-height:1.5;margin-top:15px
 }
 </style>
-</
+</head>
+
+<body>
+<div class="wrap">
+
+<header>
+<div style="font-size:42px">⚽</div>
+<h1>VirtualPredict AI</h1>
+<p>
+Upload an instant virtual football screenshot
+for AI-assisted analysis of the visible games.
+</p>
+</header>
+
+<div class="card">
+<h2>📱 Account Number</h2>
+
+<label class="title">
+Phone number used to create the betting account
+</label>
+
+<input id="phone" type="tel"
+placeholder="Enter phone number"
+inputmode="tel">
+
+<div class="note">
+This page does not send or store this number.
+Never enter a password, PIN or payment information.
+</div>
+</div>
+
+<div class="card">
+<div class="upload">
+
+<h2>📸 Game Screenshot</h2>
+<p style="color:#aeb7c7">
+Choose a screenshot or take a new photo.
+</p>
+
+<label for="gallery" class="filebtn">
+🖼️ Gallery
+</label>
+
+<label for="camera" class="filebtn">
+📷 Camera
+</label>
+
+<input id="gallery" type="file"
+accept="image/*"
+onchange="selectImage(this.files[0])">
+
+<input id="camera" type="file"
+accept="image/*"
+capture="environment"
+onchange="selectImage(this.files[0])">
+
+<div id="selected">✅ Screenshot selected</div>
+
+<img id="preview">
+
+<button id="analyze"
+onclick="analyzeAll()">
+🔍 Analyze All Games
+</button>
+
+<div id="status"></div>
+<div id="error"></div>
+
+</div>
+</div>
+
+<div id="results" class="card">
+<h2>📊 AI Predictions</h2>
+<div id="count"></div>
+<div id="matches"></div>
+
+<div class="warn">
+⚠️ These are AI-assisted estimates only.
+Instant virtual-game results are random and
+cannot be guaranteed.
+</div>
+</div>
+
+</div>
+
+<script>
+let file=null;
+
+function selectImage(f){
+if(!f)return;
+
+if(!f.type.startsWith("image/")){
+document.getElementById("error").textContent=
+"❌ Please select an image.";
+return;
+}
+
+file=f;
+
+let p=document.getElementById("preview");
+p.src=URL.createObjectURL(f);
+p.style.display="block";
+
+document.getElementById("selected").style.display="block";
+document.getElementById("analyze").style.display="block";
+document.getElementById("analyze").disabled=false;
+document.getElementById("error").textContent="";
+document.getElementById("status").textContent=
+"Screenshot selected. Ready to analyze.";
+}
+
+async function analyzeAll(){
+
+if(!file){
+document.getElementById("error").textContent=
+"❌ Select a screenshot first.";
+return;
+}
+
+let button=document.getElementById("analyze");
+let status=document.getElementById("status");
+let error=document.getElementById("error");
+let results=document.getElementById("results");
+let matches=document.getElementById("matches");
+
+button.disabled=true;
+status.textContent="🔄 Analyzing all visible games...";
+error.textContent="";
+results.style.display="none";
+matches.innerHTML="";
+
+let form=new FormData();
+form.append("image",file);
+
+try{
+
+let r=await fetch("/api/analyze",{
+method:"POST",
+body:form
+});
+
+let data=await r.json();
+
+if(!r.ok)throw new Error(data.error||"Analysis failed.");
+
+if(!Array.isArray(data.matches)||!data.matches.length){
+throw new Error("No readable matches found.");
+}
+
+document.getElementById("count").textContent=
+"✅ "+data.matches.length+" matches detected";
+
+data.matches.forEach((m,i)=>{
+
+let div=document.createElement("div");
+div.className="match";
+
+div.innerHTML=`
+<h3>⚽ Match ${i+1}: ${safe(m.game)}</h3>
+
+<div class="row">
+<small>MARKET</small>
+${safe(m.market||"1X2")}
+</div>
+
+<div class="row">
+<small>VISIBLE ODDS</small>
+${safe(m.odds||"Not available")}
+</div>
+
+<div class="row pred">
+<small>AI ESTIMATE</small>
+<strong>${safe(m.prediction||"No estimate")}</strong>
+</div>
+
+<div class="row">
+<small>ALTERNATIVE</small>
+${safe(m.alternative||"None")}
+</div>
+
+<div class="row">
+<small>CONFIDENCE</small>
+${safe(m.confidence||"Low")}
+</div>
+
+<div class="row">
+<small>RISK</small>
+${safe(m.risk||"High")}
+</div>
+
+<div class="row">
+<small>ANALYSIS</small>
+${safe(m.analysis||"No analysis")}
+</div>
+`;
+
+matches.appendChild(div);
+});
+
+results.style.display="block";
+status.textContent=
+"✅ Analysis complete — all detected matches shown.";
+
+results.scrollIntoView({
+behavior:"smooth",
+block:"start"
+});
+
+}catch(e){
+
+error.textContent="❌ "+e.message;
+status.textContent="";
+
+}finally{
+
+button.disabled=false;
+
+}
+}
+
+function safe(x){
+return String(x)
+.replace(/&/g,"&amp;")
+.replace(/</g,"&lt;")
+.replace(/>/g,"&gt;")
+.replace(/"/g,"&quot;")
+.replace(/'/g,"&#039;");
+}
+</script>
+
+</body>
+</html>
