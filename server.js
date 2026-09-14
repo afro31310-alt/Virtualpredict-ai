@@ -30,67 +30,74 @@ app.post("/api/analyze", upload.single("image"), async (req, res) => {
 
     if (!req.file) {
       return res.status(400).json({
-        error: "No screenshot was uploaded."
+        error: "Please upload a screenshot."
       });
     }
 
     if (!process.env.OPENAI_API_KEY) {
       return res.status(500).json({
-        error: "OPENAI_API_KEY is not configured on the server."
+        error: "AI service is not configured."
       });
     }
 
     const mimeType = req.file.mimetype || "image/jpeg";
 
-    const base64Image = req.file.buffer.toString("base64");
+    const base64Image =
+      req.file.buffer.toString("base64");
 
     const imageDataUrl =
       `data:${mimeType};base64,${base64Image}`;
 
     const prompt = `
-Analyze this virtual football betting screenshot.
+Analyze this instant virtual football screenshot carefully.
 
 IMPORTANT:
-- Identify EVERY football match that is visibly shown in the screenshot.
-- Do NOT analyze only the first match.
-- Return a prediction for EACH visible match.
-- Read the team names and visible 1X2 odds carefully.
-- If a match is partially visible but the teams can be identified, include it.
-- Do not invent matches that are not visible.
-- Use the visible odds and information in the screenshot.
-- Predictions are estimates, NOT guaranteed results.
 
-For EVERY visible match return:
+1. Identify EVERY football match that is visibly readable.
+2. Do NOT analyze only the first match.
+3. Do NOT invent matches.
+4. Read the team names carefully.
+5. Read the visible 1X2 odds when possible.
+6. Create ONE result for EACH visible match.
+7. If a match is too unclear to identify, do not invent the team names.
+8. Predictions are estimates only. Virtual-game results are random
+   and cannot be guaranteed.
 
-game
-market
-prediction
-confidence
-alternative
-risk
-odds
-analysis
+For each visible match provide:
 
-The "odds" field should contain the visible 1X2 odds when available.
+- game
+- market
+- odds
+- prediction
+- confidence
+- alternative
+- risk
+- analysis
 
-Return ONLY valid JSON in exactly this format:
+Use the visible 1X2 market when that is what the screenshot shows.
+
+Return ONLY valid JSON.
+
+Use exactly this structure:
 
 {
   "matches": [
     {
       "game": "BHA vs ARS",
       "market": "1X2",
+      "odds": "2.80 / 3.54 / 2.44",
       "prediction": "ARS to win",
       "confidence": "Low",
       "alternative": "Draw",
       "risk": "High",
-      "odds": "2.80 / 3.54 / 2.44",
-      "analysis": "Brief explanation."
+      "analysis": "Brief explanation based on the visible information."
     }
   ]
 }
 
-Again: INCLUDE ALL VISIBLE MATCHES, NOT JUST ONE.
+VERY IMPORTANT:
+Return ALL readable matches in the screenshot,
+not just the first match.
 `;
 
     const response = await client.responses.create({
@@ -128,20 +135,23 @@ Again: INCLUDE ALL VISIBLE MATCHES, NOT JUST ONE.
 
       result = JSON.parse(text);
 
-    } catch (jsonError) {
+    } catch (error) {
 
-      console.error("AI returned invalid JSON:", text);
+      console.error("Invalid AI JSON:", text);
 
       return res.status(500).json({
-        error: "The AI returned an invalid analysis response."
+        error: "The AI returned an invalid result. Please try again."
       });
 
     }
 
-    if (!result.matches || !Array.isArray(result.matches)) {
+    if (
+      !result.matches ||
+      !Array.isArray(result.matches)
+    ) {
 
       return res.status(500).json({
-        error: "No match list was returned by the AI."
+        error: "No matches were detected."
       });
 
     }
@@ -152,10 +162,12 @@ Again: INCLUDE ALL VISIBLE MATCHES, NOT JUST ONE.
 
   } catch (error) {
 
-    console.error("Analysis error:", error);
+    console.error("Server error:", error);
 
     res.status(500).json({
-      error: error.message || "Unable to analyze screenshot."
+      error:
+        error.message ||
+        "Unable to analyze the screenshot."
     });
 
   }
