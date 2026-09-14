@@ -1,17 +1,12 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<meta name="viewport"
-      content="width=device-width, initial-scale=1.0">
-
-<title>VirtualPredict AI</title>
+<title>SportyPredict AI</title>
 
 <style>
-
 * {
   box-sizing: border-box;
 }
@@ -25,56 +20,114 @@ body {
 
 .container {
   width: 100%;
-  max-width: 700px;
+  max-width: 720px;
   margin: auto;
-  padding: 20px;
+  padding: 18px;
 }
 
 .header {
   text-align: center;
-  padding: 25px 10px;
+  padding: 28px 10px;
+}
+
+.logo {
+  font-size: 42px;
 }
 
 .header h1 {
-  margin: 0;
+  margin: 5px 0;
   font-size: 32px;
 }
 
 .header p {
-  color: #aeb7c7;
-  font-size: 17px;
+  color: #9da8bc;
+  font-size: 16px;
+  line-height: 1.5;
 }
 
 .card {
-  background: #050a17;
-  border: 1px solid #273044;
-  border-radius: 18px;
+  background: #070d1b;
+  border: 1px solid #263149;
+  border-radius: 20px;
   padding: 20px;
   margin-bottom: 18px;
 }
 
+.section-title {
+  font-size: 21px;
+  font-weight: bold;
+  margin-bottom: 18px;
+}
+
+.input-label {
+  display: block;
+  color: #aeb7c7;
+  font-size: 14px;
+  margin-bottom: 8px;
+}
+
+.phone-input {
+  width: 100%;
+  padding: 15px;
+  border-radius: 11px;
+  border: 1px solid #39445d;
+  background: #101827;
+  color: white;
+  font-size: 16px;
+  outline: none;
+}
+
+.phone-input:focus {
+  border-color: #00b978;
+}
+
+.phone-note {
+  color: #707c91;
+  font-size: 12px;
+  line-height: 1.5;
+  margin-top: 8px;
+}
+
 .upload-area {
   border: 2px dashed #46536e;
-  border-radius: 16px;
+  border-radius: 17px;
   padding: 25px 15px;
   text-align: center;
+}
+
+.upload-icon {
+  font-size: 45px;
+}
+
+.upload-area h2 {
+  margin: 8px 0;
+}
+
+.upload-area p {
+  color: #aeb7c7;
+  line-height: 1.5;
 }
 
 .buttons {
   display: flex;
   gap: 10px;
   justify-content: center;
-  margin-top: 18px;
+  flex-wrap: wrap;
+  margin-top: 20px;
 }
 
 .upload-button {
   display: inline-block;
-  background: #263149;
+  background: #27324d;
   color: white;
-  border-radius: 10px;
-  padding: 13px 18px;
-  font-size: 15px;
+  border-radius: 11px;
+  padding: 14px 20px;
   font-weight: bold;
+  cursor: pointer;
+}
+
+.upload-button:active {
+  transform: scale(0.97);
 }
 
 input[type="file"] {
@@ -84,67 +137,88 @@ input[type="file"] {
   opacity: 0;
 }
 
-#preview {
-  width: 100%;
-  max-height: 420px;
-  object-fit: contain;
-  border-radius: 12px;
-  margin-top: 20px;
-  display: none;
-  background: #080b12;
-}
-
 #selectedText {
   display: none;
   color: #00d084;
   font-weight: bold;
-  margin-top: 12px;
+  margin-top: 15px;
 }
 
-.analyze {
+#preview {
+  display: none;
+  width: 100%;
+  max-height: 450px;
+  object-fit: contain;
+  border-radius: 14px;
+  margin-top: 18px;
+  background: #02050b;
+  border: 1px solid #39445d;
+}
+
+.analyze-button {
+  display: none;
   width: 100%;
   margin-top: 18px;
-  font-size: 17px;
+  padding: 16px;
+  border: none;
+  border-radius: 12px;
   background: #00a86b;
   color: white;
-  border: none;
-  border-radius: 10px;
-  padding: 15px;
+  font-size: 17px;
   font-weight: bold;
-  display: none;
+  cursor: pointer;
 }
 
-.analyze:disabled {
-  opacity: 0.6;
+.analyze-button:disabled {
+  opacity: 0.55;
 }
 
 .status {
   text-align: center;
-  color: #aeb7c7;
   margin-top: 15px;
+  color: #aeb7c7;
+  min-height: 22px;
 }
 
 .error {
   color: #ff7777;
   text-align: center;
-  margin-top: 15px;
+  margin-top: 12px;
 }
 
 #results {
   display: none;
 }
 
+.results-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 15px;
+}
+
+.match-count {
+  background: #123b2c;
+  color: #00d084;
+  padding: 8px 11px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: bold;
+}
+
 .match-card {
-  background: #0e1420;
-  border: 1px solid #273044;
-  border-radius: 15px;
-  padding: 18px;
+  background: #0d1422;
+  border: 1px solid #29354c;
+  border-radius: 16px;
+  padding: 17px;
   margin-bottom: 15px;
 }
 
 .match-number {
-  color: #7f8ba3;
-  font-size: 13px;
+  color: #77849b;
+  font-size: 12px;
+  font-weight: bold;
   margin-bottom: 8px;
 }
 
@@ -155,502 +229,56 @@ input[type="file"] {
 }
 
 .info {
+  background: #151d2c;
+  border-radius: 10px;
   padding: 11px;
-  background: #151c2a;
-  border-radius: 9px;
-  margin: 8px 0;
+  margin-top: 8px;
 }
 
-.label {
-  color: #8f9bb0;
+.info-label {
+  color: #8995aa;
   font-size: 12px;
-  margin-bottom: 4px;
+  margin-bottom: 5px;
 }
 
-.value {
+.info-value {
   font-size: 16px;
   font-weight: bold;
 }
 
 .prediction {
+  background: #08271d;
   border: 1px solid #00a86b;
-  background: #09251c;
+}
+
+.prediction .info-label {
+  color: #55d9a9;
+}
+
+.confidence {
+  display: inline-block;
+  margin-top: 10px;
+  background: #263149;
+  border-radius: 8px;
+  padding: 7px 10px;
+  font-size: 13px;
 }
 
 .warning {
-  color: #ffcc66;
+  margin-top: 20px;
+  padding: 13px;
+  border-radius: 10px;
+  background: #211b0b;
+  color: #ffd36a;
   font-size: 13px;
   line-height: 1.5;
-  margin-top: 18px;
 }
 
 .footer {
   text-align: center;
   color: #667085;
   font-size: 12px;
-  padding: 20px 0;
+  padding: 25px 0;
 }
-
 </style>
-
-</head>
-
-<body>
-
-<div class="container">
-
-<div class="header">
-
-<h1>⚽ VirtualPredict AI</h1>
-
-<p>
-Upload a virtual football screenshot for AI analysis
-</p>
-
-</div>
-
-
-<div class="card">
-
-<div class="upload-area">
-
-<h2>Upload Screenshot</h2>
-
-<p>
-Choose a screenshot from your phone or take a new photo.
-</p>
-
-
-<div class="buttons">
-
-<label for="galleryInput"
-       class="upload-button">
-
-🖼️ Gallery
-
-</label>
-
-
-<label for="cameraInput"
-       class="upload-button">
-
-📷 Camera
-
-</label>
-
-</div>
-
-
-<input
-id="galleryInput"
-type="file"
-accept="image/*"
-onchange="handleFile(this.files[0])"
->
-
-
-<input
-id="cameraInput"
-type="file"
-accept="image/*"
-capture="environment"
-onchange="handleFile(this.files[0])"
->
-
-
-<div id="selectedText">
-
-✅ Screenshot selected
-
-</div>
-
-
-<img
-id="preview"
-alt="Selected screenshot"
->
-
-
-<button
-id="analyzeButton"
-class="analyze"
-onclick="analyzeScreenshot()"
->
-
-🔍 Analyze All Matches
-
-</button>
-
-
-<div id="status"
-     class="status">
-</div>
-
-
-<div id="error"
-     class="error">
-</div>
-
-</div>
-
-</div>
-
-
-<div id="results"
-     class="card">
-
-<h2>📊 AI Analysis</h2>
-
-<div id="matches"></div>
-
-<div class="warning">
-
-⚠️ These are AI estimates based on information visible
-in the screenshot. Virtual game results are random and
-cannot be guaranteed.
-
-</div>
-
-</div>
-
-
-<div class="footer">
-
-VirtualPredict AI • AI-assisted screenshot analysis
-
-</div>
-
-</div>
-
-
-<script>
-
-let selectedFile = null;
-
-
-function handleFile(file) {
-
-  if (!file) {
-    return;
-  }
-
-  if (!file.type.startsWith("image/")) {
-
-    document.getElementById("error").textContent =
-      "❌ Please select an image.";
-
-    return;
-  }
-
-  selectedFile = file;
-
-  const preview =
-    document.getElementById("preview");
-
-  const analyzeButton =
-    document.getElementById("analyzeButton");
-
-  const selectedText =
-    document.getElementById("selectedText");
-
-  const status =
-    document.getElementById("status");
-
-  const error =
-    document.getElementById("error");
-
-  const results =
-    document.getElementById("results");
-
-
-  preview.src =
-    URL.createObjectURL(file);
-
-  preview.style.display =
-    "block";
-
-
-  selectedText.style.display =
-    "block";
-
-
-  analyzeButton.style.display =
-    "block";
-
-  analyzeButton.disabled =
-    false;
-
-
-  status.textContent =
-    "Screenshot selected. Ready to analyze all matches.";
-
-
-  error.textContent = "";
-
-  results.style.display =
-    "none";
-
-}
-
-
-async function analyzeScreenshot() {
-
-  if (!selectedFile) {
-
-    document.getElementById("error").textContent =
-      "❌ Please select a screenshot first.";
-
-    return;
-  }
-
-
-  const button =
-    document.getElementById("analyzeButton");
-
-  const status =
-    document.getElementById("status");
-
-  const error =
-    document.getElementById("error");
-
-  const results =
-    document.getElementById("results");
-
-  const matchesContainer =
-    document.getElementById("matches");
-
-
-  button.disabled = true;
-
-  status.textContent =
-    "🔄 Analyzing ALL visible matches...";
-
-  error.textContent = "";
-
-  results.style.display =
-    "none";
-
-  matchesContainer.innerHTML = "";
-
-
-  const formData =
-    new FormData();
-
-  formData.append(
-    "image",
-    selectedFile
-  );
-
-
-  try {
-
-    const response =
-      await fetch(
-        "/api/analyze",
-        {
-          method: "POST",
-          body: formData
-        }
-      );
-
-
-    const data =
-      await response.json();
-
-
-    if (!response.ok) {
-
-      throw new Error(
-        data.error ||
-        "The AI analysis failed."
-      );
-
-    }
-
-
-    if (!data.matches ||
-        data.matches.length === 0) {
-
-      throw new Error(
-        "No visible matches were detected."
-      );
-
-    }
-
-
-    data.matches.forEach(
-      function(match, index) {
-
-        const card =
-          document.createElement("div");
-
-        card.className =
-          "match-card";
-
-
-        card.innerHTML = `
-
-          <div class="match-number">
-            MATCH ${index + 1}
-          </div>
-
-          <div class="match-title">
-            ⚽ ${escapeHtml(match.game || "Unknown match")}
-          </div>
-
-          <div class="info">
-
-            <div class="label">
-              MARKET
-            </div>
-
-            <div class="value">
-              ${escapeHtml(match.market || "1X2")}
-            </div>
-
-          </div>
-
-
-          <div class="info prediction">
-
-            <div class="label">
-              PREDICTION
-            </div>
-
-            <div class="value">
-              ${escapeHtml(match.prediction || "No prediction")}
-            </div>
-
-          </div>
-
-
-          <div class="info">
-
-            <div class="label">
-              VISIBLE ODDS
-            </div>
-
-            <div class="value">
-              ${escapeHtml(match.odds || "Not available")}
-            </div>
-
-          </div>
-
-
-          <div class="info">
-
-            <div class="label">
-              CONFIDENCE
-            </div>
-
-            <div class="value">
-              ${escapeHtml(match.confidence || "Low")}
-            </div>
-
-          </div>
-
-
-          <div class="info">
-
-            <div class="label">
-              ALTERNATIVE
-            </div>
-
-            <div class="value">
-              ${escapeHtml(match.alternative || "None")}
-            </div>
-
-          </div>
-
-
-          <div class="info">
-
-            <div class="label">
-              RISK
-            </div>
-
-            <div class="value">
-              ${escapeHtml(match.risk || "High")}
-            </div>
-
-          </div>
-
-
-          <div class="info">
-
-            <div class="label">
-              ANALYSIS
-            </div>
-
-            <div class="value">
-              ${escapeHtml(match.analysis || "No analysis available.")}
-            </div>
-
-          </div>
-
-        `;
-
-
-        matchesContainer.appendChild(card);
-
-      }
-    );
-
-
-    results.style.display =
-      "block";
-
-
-    status.textContent =
-      "✅ Analysis complete — " +
-      data.matches.length +
-      " matches found.";
-
-
-    results.scrollIntoView({
-      behavior: "smooth",
-      block: "start"
-    });
-
-
-  } catch (err) {
-
-    console.error(err);
-
-    error.textContent =
-      "❌ " +
-      (err.message ||
-       "Unable to analyze screenshot.");
-
-    status.textContent = "";
-
-  } finally {
-
-    button.disabled = false;
-
-  }
-
-}
-
-
-function escapeHtml(value) {
-
-  return String(value)
-
-    .replace(/&/g, "&amp;")
-
-    .replace(/</g, "&lt;")
-
-    .replace(/>/g, "&gt;")
-
-    .replace(/"/g, "&quot;")
-
-    .replace(/'/g, "&#039;");
-
-}
-
-</script>
-
-</body>
-
-</html>
+</
