@@ -14,7 +14,7 @@
 body {
   margin: 0;
   font-family: Arial, sans-serif;
-  background: #050505;
+  background: linear-gradient(135deg, #050505, #260000);
   color: white;
 }
 
@@ -27,8 +27,7 @@ body {
 
 h1 {
   text-align: center;
-  color: #ff1515;
-  margin-bottom: 8px;
+  color: #ff1717;
 }
 
 .subtitle {
@@ -37,162 +36,135 @@ h1 {
   margin-bottom: 25px;
 }
 
-.upload-box {
-  border: 2px dashed #7a2222;
+.box {
+  background: #100606;
+  border: 2px solid #700000;
   border-radius: 18px;
-  padding: 25px 18px;
-  background: #100707;
+  padding: 20px;
 }
 
-.upload-text {
-  text-align: center;
-  color: #ccc;
-  margin-bottom: 20px;
-}
-
-/* ACCOUNT NUMBER */
-
-.account-box {
-  margin-bottom: 22px;
-}
-
-.account-label {
+label {
   display: block;
-  color: white;
   font-weight: bold;
   margin-bottom: 8px;
 }
 
-.account-input {
+input[type="tel"] {
   width: 100%;
   padding: 15px;
   border-radius: 12px;
-  border: 1px solid #8b0000;
-  background: #080808;
+  border: 1px solid #800000;
+  background: #050505;
   color: white;
   font-size: 17px;
-  outline: none;
+  margin-bottom: 20px;
 }
 
-.account-input:focus {
-  border-color: #ff1515;
-}
-
-.account-note {
-  color: #999;
+.note {
+  color: #888;
   font-size: 12px;
-  margin-top: 7px;
+  margin-top: -14px;
+  margin-bottom: 20px;
 }
 
-/* BUTTONS */
-
-.buttons {
+.uploads {
   display: flex;
-  gap: 15px;
-  justify-content: center;
+  gap: 12px;
   flex-wrap: wrap;
 }
 
-.upload-btn {
-  display: inline-block;
-  background: #e60000;
-  color: white;
-  padding: 15px 35px;
-  border-radius: 14px;
-  font-size: 18px;
+.upload {
+  flex: 1;
+  min-width: 130px;
+  text-align: center;
+  padding: 16px 10px;
+  background: #e00000;
+  border-radius: 12px;
   font-weight: bold;
   cursor: pointer;
-  text-align: center;
 }
 
-.upload-btn:active {
+.upload:active {
   transform: scale(.97);
 }
 
 input[type="file"] {
-  display: none;
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
 }
 
-.selected {
+#selected {
+  display: none;
   text-align: center;
   color: #00ff88;
   font-weight: bold;
-  font-size: 18px;
-  margin: 25px 0 15px;
-  display: none;
+  margin: 20px 0 10px;
 }
 
-.preview {
+#preview {
   display: none;
   width: 100%;
   max-height: 600px;
   object-fit: contain;
-  border-radius: 15px;
-  border: 1px solid #8b0000;
-  background: black;
-  margin-bottom: 20px;
+  border-radius: 14px;
+  border: 2px solid #a00000;
+  margin: 10px 0 20px;
+  background: #000;
 }
 
-.analyze {
+#analyze {
   width: 100%;
-  border: none;
-  border-radius: 15px;
-  padding: 18px;
-  background: #ff0808;
+  padding: 17px;
+  border: 0;
+  border-radius: 13px;
+  background: #ff0909;
   color: white;
-  font-size: 21px;
+  font-size: 20px;
   font-weight: bold;
-  cursor: pointer;
 }
 
-.analyze:disabled {
+#analyze:disabled {
   background: #555;
-  cursor: not-allowed;
 }
 
-.error {
-  color: #ff5555;
-  text-align: center;
-  font-weight: bold;
-  margin-top: 20px;
-}
-
-.loading {
-  text-align: center;
-  color: #ff4444;
-  font-size: 18px;
-  margin: 20px 0;
+#loading {
   display: none;
+  text-align: center;
+  margin: 20px 0;
+  color: #ff4444;
 }
 
-.results {
-  margin-top: 25px;
+#error {
+  text-align: center;
+  color: #ff5555;
+  font-weight: bold;
+  margin-top: 15px;
 }
 
 .match {
-  background: #110808;
-  border: 1px solid #8b0000;
-  border-radius: 16px;
+  background: #100606;
+  border: 1px solid #800000;
+  border-radius: 15px;
   padding: 18px;
-  margin-bottom: 18px;
+  margin-top: 18px;
 }
 
-.match-number {
+.number {
   color: #ff3333;
   font-weight: bold;
-  margin-bottom: 8px;
 }
 
 .game {
   font-size: 21px;
   font-weight: bold;
-  margin-bottom: 15px;
+  margin: 10px 0;
 }
 
 .row {
   display: flex;
   justify-content: space-between;
-  gap: 10px;
   padding: 10px 0;
   border-bottom: 1px solid #321010;
 }
@@ -207,11 +179,11 @@ input[type="file"] {
 }
 
 .prediction {
-  margin-top: 15px;
-  padding: 15px;
+  background: #260000;
+  border: 1px solid red;
   border-radius: 12px;
-  background: #260606;
-  border: 1px solid #e60000;
+  padding: 15px;
+  margin-top: 15px;
 }
 
 .prediction-title {
@@ -221,10 +193,10 @@ input[type="file"] {
 }
 
 .analysis {
-  margin-top: 15px;
-  color: #ccc;
-  line-height: 1.5;
+  color: #bbb;
   font-size: 14px;
+  line-height: 1.5;
+  margin-top: 15px;
 }
 </style>
 </head>
@@ -233,245 +205,220 @@ input[type="file"] {
 
 <div class="container">
 
-  <h1>⚡ VirtualPredict AI</h1>
+<h1>⚡ VirtualPredict AI</h1>
 
-  <div class="subtitle">
-    1X2 Virtual Game Analysis
-  </div>
+<div class="subtitle">
+1X2 Virtual Game Analysis
+</div>
 
-  <div class="upload-box">
+<div class="box">
 
-    <!-- ACCOUNT NUMBER -->
+<label for="account">
+📱 SportyBet Account Number
+</label>
 
-    <div class="account-box">
+<input
+  id="account"
+  type="tel"
+  inputmode="numeric"
+  placeholder="Enter account number"
+>
 
-      <label class="account-label" for="accountNumber">
-        📱 SportyBet Account Number
-      </label>
+<div class="note">
+Your account number is not sent to the AI.
+Never enter your password or PIN.
+</div>
 
-      <input
-        id="accountNumber"
-        class="account-input"
-        type="tel"
-        inputmode="numeric"
-        placeholder="Enter your account number"
-        autocomplete="off"
-      >
+<div class="uploads">
 
-      <div class="account-note">
-        Your account number is not sent to the AI.
-        Never enter your password or PIN.
-      </div>
+<label class="upload" for="gallery">
+🖼️ Gallery
+</label>
 
-    </div>
+<input
+  id="gallery"
+  type="file"
+  accept="image/*"
+>
 
-    <div class="upload-text">
-      Select a screenshot containing the virtual games.
-    </div>
+<label class="upload" for="camera">
+📷 Camera
+</label>
 
-    <!-- UPLOAD BUTTONS -->
+<input
+  id="camera"
+  type="file"
+  accept="image/*"
+  capture="environment"
+>
 
-    <div class="buttons">
+</div>
 
-      <label class="upload-btn" for="gallery">
-        🖼️ Gallery
-      </label>
+<div id="selected">
+✅ Screenshot selected
+</div>
 
-      <input
-        id="gallery"
-        type="file"
-        accept="image/*"
-      >
+<img
+  id="preview"
+  alt="Selected screenshot"
+>
 
-      <label class="upload-btn" for="camera">
-        📷 Camera
-      </label>
+<button
+  id="analyze"
+  disabled
+>
+🔍 Analyze All Games
+</button>
 
-      <input
-        id="camera"
-        type="file"
-        accept="image/*"
-        capture="environment"
-      >
+<div id="loading">
+🔄 Analyzing all readable games...
+</div>
 
-    </div>
+<div id="error"></div>
 
-    <!-- SELECTED -->
+</div>
 
-    <div id="selected" class="selected">
-      ✅ Screenshot selected
-    </div>
-
-    <!-- PREVIEW -->
-
-    <img
-      id="preview"
-      class="preview"
-      alt="Screenshot preview"
-    >
-
-    <!-- ANALYZE -->
-
-    <button
-      id="analyze"
-      class="analyze"
-      disabled
-    >
-      🔍 Analyze All Games
-    </button>
-
-    <div id="loading" class="loading">
-      🔄 Analyzing all readable games...
-    </div>
-
-    <div id="error" class="error"></div>
-
-  </div>
-
-  <!-- RESULTS -->
-
-  <div id="results" class="results"></div>
+<div id="results"></div>
 
 </div>
 
 <script>
+(function() {
 
-const gallery =
-  document.getElementById("gallery");
+  const gallery =
+    document.getElementById("gallery");
 
-const camera =
-  document.getElementById("camera");
+  const camera =
+    document.getElementById("camera");
 
-const preview =
-  document.getElementById("preview");
+  const preview =
+    document.getElementById("preview");
 
-const selected =
-  document.getElementById("selected");
+  const selected =
+    document.getElementById("selected");
 
-const analyze =
-  document.getElementById("analyze");
+  const analyze =
+    document.getElementById("analyze");
 
-const loading =
-  document.getElementById("loading");
+  const loading =
+    document.getElementById("loading");
 
-const errorBox =
-  document.getElementById("error");
+  const error =
+    document.getElementById("error");
 
-const results =
-  document.getElementById("results");
+  const results =
+    document.getElementById("results");
 
-const accountNumber =
-  document.getElementById("accountNumber");
-
-let selectedFile = null;
+  let file = null;
 
 
-/* =========================
-   SAVE ACCOUNT NUMBER
-   LOCALLY ONLY
-========================= */
+  function showImage(input) {
 
-accountNumber.addEventListener(
-  "input",
-  function() {
+    if (!input.files ||
+        input.files.length === 0) {
+      return;
+    }
 
-    localStorage.setItem(
-      "sportybetAccountNumber",
-      this.value
-    );
+    file = input.files[0];
 
-  }
-);
+    if (!file.type.startsWith("image/")) {
+      error.textContent =
+        "❌ Please select an image.";
+      return;
+    }
 
+    const url =
+      URL.createObjectURL(file);
 
-/* =========================
-   LOAD SAVED NUMBER
-========================= */
-
-const savedNumber =
-  localStorage.getItem(
-    "sportybetAccountNumber"
-  );
-
-if (savedNumber) {
-  accountNumber.value = savedNumber;
-}
-
-
-/* =========================
-   FILE SELECTION
-========================= */
-
-function chooseFile(file) {
-
-  if (!file) return;
-
-  selectedFile = file;
-
-  const reader =
-    new FileReader();
-
-  reader.onload =
-    function(e) {
-
-      preview.src =
-        e.target.result;
-
-      preview.style.display =
-        "block";
-
-      selected.style.display =
-        "block";
-
-      analyze.disabled =
-        false;
-
-      errorBox.textContent =
-        "";
-
-      results.innerHTML =
-        "";
-
+    preview.onload = function() {
+      URL.revokeObjectURL(url);
     };
 
-  reader.readAsDataURL(file);
-}
+    preview.src = url;
+    preview.style.display = "block";
 
+    selected.style.display = "block";
 
-/* =========================
-   GALLERY
-========================= */
+    analyze.disabled = false;
 
-gallery.addEventListener(
-  "change",
-  function() {
+    error.textContent = "";
 
-    chooseFile(
-      this.files[0]
-    );
-
+    results.innerHTML = "";
   }
-);
 
 
-/* =========================
-   CAMERA
-========================= */
-
-camera.addEventListener(
-  "change",
-  function() {
-
-    chooseFile(
-      this.files[0]
-    );
-
-  }
-);
+  gallery.onchange = function() {
+    showImage(this);
+  };
 
 
-/* =========================
-   ANALYZE
-========================= */
+  camera.onchange = function() {
+    showImage(this);
+  };
 
-analyze.addEventListener
+
+  analyze.onclick = async function() {
+
+    if (!file) {
+      error.textContent =
+        "❌ Please select an image first.";
+      return;
+    }
+
+    analyze.disabled = true;
+    loading.style.display = "block";
+    error.textContent = "";
+    results.innerHTML = "";
+
+    const form =
+      new FormData();
+
+    form.append("image", file);
+
+    try {
+
+      const response =
+        await fetch(
+          "/api/analyze",
+          {
+            method: "POST",
+            body: form
+          }
+        );
+
+      const data =
+        await response.json();
+
+      if (!response.ok) {
+        throw new Error(
+          data.error ||
+          "Analysis failed."
+        );
+      }
+
+      if (!data.matches ||
+          data.matches.length === 0) {
+        throw new Error(
+          "No matches found."
+        );
+      }
+
+      data.matches.forEach(
+        function(match, i) {
+
+          const div =
+            document.createElement("div");
+
+          div.className = "match";
+
+          div.innerHTML =
+
+            '<div class="number">' +
+            'MATCH ' + (i + 1) +
+            '</div>' +
+
+            '<div class="game">⚽ ' +
+            safe(match.game) +
+            '</div>' +
+
+            '<div class="
