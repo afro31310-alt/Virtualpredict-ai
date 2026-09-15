@@ -1,424 +1,125 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>VirtualPredict AI</title>
+  <title>VirtualPredict AI</title>
 
-<style>
-* {
-  box-sizing: border-box;
-}
-
-body {
-  margin: 0;
-  font-family: Arial, sans-serif;
-  background: linear-gradient(135deg, #050505, #260000);
-  color: white;
-}
-
-.container {
-  width: 94%;
-  max-width: 700px;
-  margin: auto;
-  padding: 25px 0 50px;
-}
-
-h1 {
-  text-align: center;
-  color: #ff1717;
-}
-
-.subtitle {
-  text-align: center;
-  color: #ccc;
-  margin-bottom: 25px;
-}
-
-.box {
-  background: #100606;
-  border: 2px solid #700000;
-  border-radius: 18px;
-  padding: 20px;
-}
-
-label {
-  display: block;
-  font-weight: bold;
-  margin-bottom: 8px;
-}
-
-input[type="tel"] {
-  width: 100%;
-  padding: 15px;
-  border-radius: 12px;
-  border: 1px solid #800000;
-  background: #050505;
-  color: white;
-  font-size: 17px;
-  margin-bottom: 20px;
-}
-
-.note {
-  color: #888;
-  font-size: 12px;
-  margin-top: -14px;
-  margin-bottom: 20px;
-}
-
-.uploads {
-  display: flex;
-  gap: 12px;
-  flex-wrap: wrap;
-}
-
-.upload {
-  flex: 1;
-  min-width: 130px;
-  text-align: center;
-  padding: 16px 10px;
-  background: #e00000;
-  border-radius: 12px;
-  font-weight: bold;
-  cursor: pointer;
-}
-
-.upload:active {
-  transform: scale(.97);
-}
-
-input[type="file"] {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  opacity: 0;
-}
-
-#selected {
-  display: none;
-  text-align: center;
-  color: #00ff88;
-  font-weight: bold;
-  margin: 20px 0 10px;
-}
-
-#preview {
-  display: none;
-  width: 100%;
-  max-height: 600px;
-  object-fit: contain;
-  border-radius: 14px;
-  border: 2px solid #a00000;
-  margin: 10px 0 20px;
-  background: #000;
-}
-
-#analyze {
-  width: 100%;
-  padding: 17px;
-  border: 0;
-  border-radius: 13px;
-  background: #ff0909;
-  color: white;
-  font-size: 20px;
-  font-weight: bold;
-}
-
-#analyze:disabled {
-  background: #555;
-}
-
-#loading {
-  display: none;
-  text-align: center;
-  margin: 20px 0;
-  color: #ff4444;
-}
-
-#error {
-  text-align: center;
-  color: #ff5555;
-  font-weight: bold;
-  margin-top: 15px;
-}
-
-.match {
-  background: #100606;
-  border: 1px solid #800000;
-  border-radius: 15px;
-  padding: 18px;
-  margin-top: 18px;
-}
-
-.number {
-  color: #ff3333;
-  font-weight: bold;
-}
-
-.game {
-  font-size: 21px;
-  font-weight: bold;
-  margin: 10px 0;
-}
-
-.row {
-  display: flex;
-  justify-content: space-between;
-  padding: 10px 0;
-  border-bottom: 1px solid #321010;
-}
-
-.label {
-  color: #aaa;
-}
-
-.value {
-  font-weight: bold;
-  text-align: right;
-}
-
-.prediction {
-  background: #260000;
-  border: 1px solid red;
-  border-radius: 12px;
-  padding: 15px;
-  margin-top: 15px;
-}
-
-.prediction-title {
-  color: #ff3333;
-  font-weight: bold;
-  margin-bottom: 8px;
-}
-
-.analysis {
-  color: #bbb;
-  font-size: 14px;
-  line-height: 1.5;
-  margin-top: 15px;
-}
-</style>
-</head>
-
-<body>
-
-<div class="container">
-
-<h1>⚡ VirtualPredict AI</h1>
-
-<div class="subtitle">
-1X2 Virtual Game Analysis
-</div>
-
-<div class="box">
-
-<label for="account">
-📱 SportyBet Account Number
-</label>
-
-<input
-  id="account"
-  type="tel"
-  inputmode="numeric"
-  placeholder="Enter account number"
->
-
-<div class="note">
-Your account number is not sent to the AI.
-Never enter your password or PIN.
-</div>
-
-<div class="uploads">
-
-<label class="upload" for="gallery">
-🖼️ Gallery
-</label>
-
-<input
-  id="gallery"
-  type="file"
-  accept="image/*"
->
-
-<label class="upload" for="camera">
-📷 Camera
-</label>
-
-<input
-  id="camera"
-  type="file"
-  accept="image/*"
-  capture="environment"
->
-
-</div>
-
-<div id="selected">
-✅ Screenshot selected
-</div>
-
-<img
-  id="preview"
-  alt="Selected screenshot"
->
-
-<button
-  id="analyze"
-  disabled
->
-🔍 Analyze All Games
-</button>
-
-<div id="loading">
-🔄 Analyzing all readable games...
-</div>
-
-<div id="error"></div>
-
-</div>
-
-<div id="results"></div>
-
-</div>
-
-<script>
-(function() {
-
-  const gallery =
-    document.getElementById("gallery");
-
-  const camera =
-    document.getElementById("camera");
-
-  const preview =
-    document.getElementById("preview");
-
-  const selected =
-    document.getElementById("selected");
-
-  const analyze =
-    document.getElementById("analyze");
-
-  const loading =
-    document.getElementById("loading");
-
-  const error =
-    document.getElementById("error");
-
-  const results =
-    document.getElementById("results");
-
-  let file = null;
-
-
-  function showImage(input) {
-
-    if (!input.files ||
-        input.files.length === 0) {
-      return;
+  <style>
+    * {
+      box-sizing: border-box;
     }
 
-    file = input.files[0];
-
-    if (!file.type.startsWith("image/")) {
-      error.textContent =
-        "❌ Please select an image.";
-      return;
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: linear-gradient(135deg, #090000, #260000, #090000);
+      color: white;
+      min-height: 100vh;
     }
 
-    const url =
-      URL.createObjectURL(file);
-
-    preview.onload = function() {
-      URL.revokeObjectURL(url);
-    };
-
-    preview.src = url;
-    preview.style.display = "block";
-
-    selected.style.display = "block";
-
-    analyze.disabled = false;
-
-    error.textContent = "";
-
-    results.innerHTML = "";
-  }
-
-
-  gallery.onchange = function() {
-    showImage(this);
-  };
-
-
-  camera.onchange = function() {
-    showImage(this);
-  };
-
-
-  analyze.onclick = async function() {
-
-    if (!file) {
-      error.textContent =
-        "❌ Please select an image first.";
-      return;
+    .container {
+      width: 94%;
+      max-width: 700px;
+      margin: auto;
+      padding: 45px 0;
     }
 
-    analyze.disabled = true;
-    loading.style.display = "block";
-    error.textContent = "";
-    results.innerHTML = "";
+    h1 {
+      text-align: center;
+      color: #ff1515;
+      font-size: 42px;
+      margin: 15px 0;
+    }
 
-    const form =
-      new FormData();
+    .subtitle {
+      text-align: center;
+      color: #ddd;
+      font-size: 20px;
+      margin-bottom: 45px;
+    }
 
-    form.append("image", file);
+    .box {
+      background: rgba(15, 0, 0, 0.92);
+      border: 2px solid #a90000;
+      border-radius: 30px;
+      padding: 28px;
+      box-shadow: 0 0 25px rgba(255, 0, 0, 0.18);
+    }
 
-    try {
+    label.title {
+      display: block;
+      font-size: 21px;
+      font-weight: bold;
+      margin-bottom: 12px;
+    }
 
-      const response =
-        await fetch(
-          "/api/analyze",
-          {
-            method: "POST",
-            body: form
-          }
-        );
+    #account {
+      width: 100%;
+      padding: 17px;
+      border-radius: 22px;
+      border: 2px solid #500000;
+      background: #050505;
+      color: white;
+      font-size: 20px;
+      outline: none;
+      margin-bottom: 10px;
+    }
 
-      const data =
-        await response.json();
+    .note {
+      color: #888;
+      font-size: 15px;
+      line-height: 1.4;
+      margin-bottom: 25px;
+    }
 
-      if (!response.ok) {
-        throw new Error(
-          data.error ||
-          "Analysis failed."
-        );
-      }
+    .buttons {
+      display: flex;
+      gap: 20px;
+      margin-bottom: 18px;
+    }
 
-      if (!data.matches ||
-          data.matches.length === 0) {
-        throw new Error(
-          "No matches found."
-        );
-      }
+    .upload-btn {
+      flex: 1;
+      background: #ed0000;
+      color: white;
+      border: none;
+      border-radius: 22px;
+      padding: 20px 10px;
+      font-size: 20px;
+      font-weight: bold;
+      text-align: center;
+      cursor: pointer;
+      display: block;
+    }
 
-      data.matches.forEach(
-        function(match, i) {
+    .upload-btn:active {
+      transform: scale(0.97);
+    }
 
-          const div =
-            document.createElement("div");
+    /*
+      The file inputs are kept in the page but visually hidden.
+      The buttons above trigger them.
+    */
+    .file-input {
+      position: fixed;
+      left: -10000px;
+      top: -10000px;
+      width: 1px;
+      height: 1px;
+      opacity: 0;
+    }
 
-          div.className = "match";
+    #previewBox {
+      display: none;
+      margin-top: 20px;
+      text-align: center;
+    }
 
-          div.innerHTML =
-
-            '<div class="number">' +
-            'MATCH ' + (i + 1) +
-            '</div>' +
-
-            '<div class="game">⚽ ' +
-            safe(match.game) +
-            '</div>' +
-
-            '<div class="
+    #preview {
+      width: 100%;
+      max-height: 500px;
+      object-fit: contain;
+      border-radius: 18px;
+      border
