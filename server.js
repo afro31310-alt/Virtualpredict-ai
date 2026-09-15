@@ -7,6 +7,7 @@ const app = express();
 
 const PORT = process.env.PORT || 10000;
 
+
 /* =========================
    OPENAI
 ========================= */
@@ -54,7 +55,7 @@ app.get("/", (req, res) => {
 
 
 /* =========================
-   AI ANALYSIS
+   ANALYZE SCREENSHOT
 ========================= */
 
 app.post(
@@ -88,7 +89,7 @@ app.post(
       }
 
 
-      /* IMAGE */
+      /* CONVERT IMAGE */
 
       const mimeType =
         req.file.mimetype ||
@@ -102,170 +103,252 @@ app.post(
 
 
       /* =========================
-         PROMPT
+         AI INSTRUCTIONS
       ========================= */
 
       const prompt = `
 
 You are an AI assistant analyzing an
-instant virtual football betting screenshot.
+instant virtual football screenshot.
 
-Analyze ONLY information that is visibly
-readable in the uploaded screenshot.
+Your job is to analyze EVERY readable
+football match in the screenshot.
 
 IMPORTANT:
 
-1. Identify EVERY football match visible
-   in the screenshot.
+1. Find EVERY readable match.
 
-2. Do NOT analyze only the first match.
+2. Never analyze only the first match.
 
-3. Do NOT invent matches.
+3. Never invent a match.
 
-4. Do NOT invent team names.
+4. Never invent team names.
 
-5. Read the visible team names carefully.
+5. Carefully read the team names.
 
-6. Read the visible 1X2 odds.
+6. Carefully read visible 1X2 odds.
 
-7. Read the visible Over/Under market
-   and its odds when available.
+7. Carefully read visible Over/Under
+   odds if they exist.
 
-8. If the Over/Under line is visible,
-   report that exact line.
+8. If Over/Under odds are NOT visible,
+   you MUST STILL PROVIDE AN
+   OVER/UNDER ESTIMATE.
 
-9. If Over/Under is not visible,
-   use "Not available" instead of inventing odds.
+9. When Over/Under odds are not visible,
+   do NOT invent or create fake odds.
 
-10. Create ONE result for EACH readable
-    football match.
+10. The Over/Under estimate should be based
+    only on information reasonably visible
+    in the screenshot, such as the teams,
+    1X2 market, odds relationship and other
+    readable information.
 
-11. The prediction is an AI-assisted estimate,
-    NOT a guaranteed result.
+11. If there is not enough information for
+    a strong Over/Under opinion, give a
+    conservative estimate and mark confidence
+    Low.
 
-12. Virtual-game results are random and
-    cannot be guaranteed.
+12. Every readable match MUST have an
+    Over/Under prediction.
 
-For every match provide:
+13. Virtual football results are random.
+    Predictions are estimates only and are
+    NOT guaranteed.
 
-- game
-- market
-- odds
-- overUnder
+14. Do not claim that any prediction is
+    certain or guaranteed.
+
+
+========================
+MARKETS
+========================
+
+Analyze BOTH:
+
+A. 1X2
+
+B. OVER/UNDER
+
+
+========================
+OVER/UNDER RULE
+========================
+
+For EVERY match, provide:
+
+- An Over/Under line
+- An Over/Under estimate
+- Over/Under odds IF visible
+- "Not available" for O/U odds IF they
+  are not visible
+
+
+Example when odds ARE visible:
+
+"overUnder": {
+  "line": "2.5",
+  "over": "1.85",
+  "under": "1.95",
+  "prediction": "Over 2.5 Goals"
+}
+
+
+Example when odds are NOT visible:
+
+"overUnder": {
+  "line": "2.5",
+  "over": "Not available",
+  "under": "Not available",
+  "prediction": "Over 2.5 Goals"
+}
+
+
+IMPORTANT:
+
+The prediction MUST NOT be:
+
+"Not available"
+
+Every match must receive an
+Over/Under prediction.
+
+
+Possible predictions include:
+
+Over 1.5 Goals
+Under 1.5 Goals
+Over 2.5 Goals
+Under 2.5 Goals
+Over 3.5 Goals
+Under 3.5 Goals
+
+
+Choose the line that is most reasonable
+from the visible information.
+
+Do not pretend the line or odds came from
+the screenshot if they were not visible.
+
+
+========================
+1X2
+========================
+
+If 1X2 odds are visible, report them.
+
+Format:
+
+"odds": "HOME / DRAW / AWAY"
+
+
+Example:
+
+"odds": "1.72 / 3.96 / 4.65"
+
+
+If the odds cannot be read:
+
+"odds": "Not available"
+
+
+Do not invent unreadable odds.
+
+
+========================
+PREDICTION
+========================
+
+Provide:
+
 - prediction
 - alternative
 - confidence
 - risk
 - analysis
 
-The main prediction should consider BOTH:
 
-A. 1X2
-
-B. Over/Under
-
-When the screenshot contains a usable
-Over/Under market, the prediction can be
-either a 1X2 selection or an Over/Under
-selection depending on which appears more
-appropriate from the visible information.
-
-IMPORTANT:
-
-Do not claim that a prediction is certain.
-
-Do not use fake percentages unless the
-screenshot or available information supports
-them.
-
-Confidence must be:
+Confidence:
 
 Low
 Medium
-or High
+High
 
-Risk must be:
+
+Risk:
 
 Low
 Medium
-or High
+High
 
+
+The analysis must explain briefly why
+the estimate was selected.
+
+Do not use fake statistics.
+
+Do not claim access to live information
+unless it is actually visible in the image.
+
+
+========================
+JSON
+========================
 
 RETURN ONLY VALID JSON.
 
-Use EXACTLY this structure:
+Use exactly this structure:
 
 {
   "matches": [
     {
-      "game": "TEAM A vs TEAM B",
+      "game": "LEE vs HUL",
       "market": "1X2 + Over/Under",
-      "odds": "2.10 / 3.40 / 3.20",
+      "odds": "1.72 / 3.96 / 4.65",
       "overUnder": {
         "line": "2.5",
-        "over": "1.85",
-        "under": "1.95"
+        "over": "Not available",
+        "under": "Not available",
+        "prediction": "Over 2.5 Goals"
       },
-      "prediction": "TEAM A Win",
+      "prediction": "LEE Win",
       "alternative": "Over 2.5 Goals",
       "confidence": "Medium",
       "risk": "Medium",
-      "analysis": "Brief explanation based only on the visible information."
+      "analysis": "Brief explanation based on the visible information."
     }
   ]
 }
 
 
-ODDS FORMAT:
+========================
+VERY IMPORTANT
+========================
 
-For 1X2:
+If there are 2 readable matches,
+return 2 objects.
 
-"odds": "HOME / DRAW / AWAY"
+If there are 5 readable matches,
+return 5 objects.
 
+If there are 10 readable matches,
+return 10 objects.
 
-For example:
+Never return only one match.
 
-"odds": "2.10 / 3.40 / 3.20"
+Every readable match MUST have:
 
+1. 1X2 information
+2. Over/Under line
+3. Over/Under prediction
+4. Confidence
+5. Risk
+6. Analysis
 
-OVER/UNDER FORMAT:
-
-"overUnder": {
-  "line": "2.5",
-  "over": "1.85",
-  "under": "1.95"
-}
-
-
-If the screenshot does not show
-Over/Under odds:
-
-"overUnder": {
-  "line": "Not available",
-  "over": "Not available",
-  "under": "Not available"
-}
+Even when Over/Under odds are not visible.
 
 
-If 1X2 odds are not readable:
-
-"odds": "Not available"
-
-
-Do not guess unreadable numbers.
-
-
-VERY IMPORTANT:
-
-Return ALL readable matches.
-
-If there are 3 matches, return 3.
-
-If there are 5 matches, return 5.
-
-If there are 10 matches, return 10.
-
-Never return only the first match.
+Return ONLY JSON.
 
 `;
 
@@ -310,7 +393,7 @@ Never return only the first match.
 
 
       /* =========================
-         GET AI RESPONSE
+         READ RESPONSE
       ========================= */
 
       let text =
@@ -361,7 +444,7 @@ Never return only the first match.
 
 
       /* =========================
-         CHECK RESULTS
+         CHECK MATCHES
       ========================= */
 
       if (
@@ -381,32 +464,72 @@ Never return only the first match.
 
         return res.status(500).json({
           error:
-            "No readable matches were found in the screenshot."
+            "No readable matches were found."
         });
 
       }
 
 
       /* =========================
-         CLEAN RESULTS
+         NORMALIZE RESULTS
       ========================= */
 
       const matches =
         result.matches.map((match) => {
 
-          const overUnder =
+
+          let overUnder =
             match.overUnder ||
             match.over_under ||
-            {
-              line:
-                "Not available",
+            {};
 
-              over:
-                "Not available",
 
-              under:
-                "Not available"
-            };
+          /* OVER/UNDER LINE */
+
+          const line =
+            overUnder.line ||
+            match.overUnderLine ||
+            match.ouLine ||
+            "2.5";
+
+
+          /* OVER ODDS */
+
+          const over =
+            overUnder.over ||
+            match.over ||
+            match.overOdds ||
+            "Not available";
+
+
+          /* UNDER ODDS */
+
+          const under =
+            overUnder.under ||
+            match.under ||
+            match.underOdds ||
+            "Not available";
+
+
+          /* OVER/UNDER PREDICTION */
+
+          let ouPrediction =
+            overUnder.prediction ||
+            match.overUnderPrediction ||
+            match.ouPrediction;
+
+
+          /*
+            Make sure an O/U estimate
+            always exists.
+          */
+
+          if (!ouPrediction) {
+
+            ouPrediction =
+              `Over ${line} Goals`;
+
+          }
 
 
           return {
@@ -415,49 +538,57 @@ Never return only the first match.
               match.game ||
               "Unknown match",
 
+
             market:
               match.market ||
               "1X2 + Over/Under",
+
 
             odds:
               match.odds ||
               "Not available",
 
+
             overUnder: {
 
               line:
-                overUnder.line ||
-                "Not available",
+                line,
 
               over:
-                overUnder.over ||
-                "Not available",
+                over,
 
               under:
-                overUnder.under ||
-                "Not available"
+                under,
+
+              prediction:
+                ouPrediction
 
             },
+
 
             prediction:
               match.prediction ||
               "No estimate",
 
+
             alternative:
               match.alternative ||
-              "None",
+              ouPrediction,
+
 
             confidence:
               match.confidence ||
               "Low",
 
+
             risk:
               match.risk ||
               "High",
 
+
             analysis:
               match.analysis ||
-              "No analysis available."
+              "AI-assisted estimate based on the visible information."
 
           };
 
@@ -465,7 +596,7 @@ Never return only the first match.
 
 
       /* =========================
-         SEND RESULTS
+         SEND TO FRONTEND
       ========================= */
 
       res.json({
@@ -481,7 +612,7 @@ Never return only the first match.
       );
 
 
-      /* API ERROR */
+      /* OPENAI ERROR */
 
       if (
         error &&
