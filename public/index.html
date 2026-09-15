@@ -2,8 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport"
-      content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <title>VirtualPredict AI</title>
 
@@ -28,7 +27,7 @@ body {
 
 h1 {
   text-align: center;
-  color: #ff1a1a;
+  color: #ff1515;
   margin-bottom: 8px;
 }
 
@@ -50,6 +49,42 @@ h1 {
   color: #ccc;
   margin-bottom: 20px;
 }
+
+/* ACCOUNT NUMBER */
+
+.account-box {
+  margin-bottom: 22px;
+}
+
+.account-label {
+  display: block;
+  color: white;
+  font-weight: bold;
+  margin-bottom: 8px;
+}
+
+.account-input {
+  width: 100%;
+  padding: 15px;
+  border-radius: 12px;
+  border: 1px solid #8b0000;
+  background: #080808;
+  color: white;
+  font-size: 17px;
+  outline: none;
+}
+
+.account-input:focus {
+  border-color: #ff1515;
+}
+
+.account-note {
+  color: #999;
+  font-size: 12px;
+  margin-top: 7px;
+}
+
+/* BUTTONS */
 
 .buttons {
   display: flex;
@@ -206,9 +241,35 @@ input[type="file"] {
 
   <div class="upload-box">
 
+    <!-- ACCOUNT NUMBER -->
+
+    <div class="account-box">
+
+      <label class="account-label" for="accountNumber">
+        📱 SportyBet Account Number
+      </label>
+
+      <input
+        id="accountNumber"
+        class="account-input"
+        type="tel"
+        inputmode="numeric"
+        placeholder="Enter your account number"
+        autocomplete="off"
+      >
+
+      <div class="account-note">
+        Your account number is not sent to the AI.
+        Never enter your password or PIN.
+      </div>
+
+    </div>
+
     <div class="upload-text">
       Select a screenshot containing the virtual games.
     </div>
+
+    <!-- UPLOAD BUTTONS -->
 
     <div class="buttons">
 
@@ -235,15 +296,21 @@ input[type="file"] {
 
     </div>
 
+    <!-- SELECTED -->
+
     <div id="selected" class="selected">
       ✅ Screenshot selected
     </div>
+
+    <!-- PREVIEW -->
 
     <img
       id="preview"
       class="preview"
       alt="Screenshot preview"
     >
+
+    <!-- ANALYZE -->
 
     <button
       id="analyze"
@@ -261,169 +328,150 @@ input[type="file"] {
 
   </div>
 
+  <!-- RESULTS -->
+
   <div id="results" class="results"></div>
 
 </div>
 
 <script>
-const gallery = document.getElementById("gallery");
-const camera = document.getElementById("camera");
-const preview = document.getElementById("preview");
-const selected = document.getElementById("selected");
-const analyze = document.getElementById("analyze");
-const loading = document.getElementById("loading");
-const errorBox = document.getElementById("error");
-const results = document.getElementById("results");
+
+const gallery =
+  document.getElementById("gallery");
+
+const camera =
+  document.getElementById("camera");
+
+const preview =
+  document.getElementById("preview");
+
+const selected =
+  document.getElementById("selected");
+
+const analyze =
+  document.getElementById("analyze");
+
+const loading =
+  document.getElementById("loading");
+
+const errorBox =
+  document.getElementById("error");
+
+const results =
+  document.getElementById("results");
+
+const accountNumber =
+  document.getElementById("accountNumber");
 
 let selectedFile = null;
 
+
+/* =========================
+   SAVE ACCOUNT NUMBER
+   LOCALLY ONLY
+========================= */
+
+accountNumber.addEventListener(
+  "input",
+  function() {
+
+    localStorage.setItem(
+      "sportybetAccountNumber",
+      this.value
+    );
+
+  }
+);
+
+
+/* =========================
+   LOAD SAVED NUMBER
+========================= */
+
+const savedNumber =
+  localStorage.getItem(
+    "sportybetAccountNumber"
+  );
+
+if (savedNumber) {
+  accountNumber.value = savedNumber;
+}
+
+
+/* =========================
+   FILE SELECTION
+========================= */
+
 function chooseFile(file) {
+
   if (!file) return;
 
   selectedFile = file;
 
-  const reader = new FileReader();
+  const reader =
+    new FileReader();
 
-  reader.onload = function(e) {
-    preview.src = e.target.result;
-    preview.style.display = "block";
-    selected.style.display = "block";
-    analyze.disabled = false;
-    errorBox.textContent = "";
-    results.innerHTML = "";
-  };
+  reader.onload =
+    function(e) {
+
+      preview.src =
+        e.target.result;
+
+      preview.style.display =
+        "block";
+
+      selected.style.display =
+        "block";
+
+      analyze.disabled =
+        false;
+
+      errorBox.textContent =
+        "";
+
+      results.innerHTML =
+        "";
+
+    };
 
   reader.readAsDataURL(file);
 }
 
-gallery.addEventListener("change", function() {
-  chooseFile(this.files[0]);
-});
 
-camera.addEventListener("change", function() {
-  chooseFile(this.files[0]);
-});
+/* =========================
+   GALLERY
+========================= */
 
-analyze.addEventListener("click", async function() {
+gallery.addEventListener(
+  "change",
+  function() {
 
-  if (!selectedFile) {
-    errorBox.textContent = "Please select a screenshot first.";
-    return;
+    chooseFile(
+      this.files[0]
+    );
+
   }
+);
 
-  analyze.disabled = true;
-  loading.style.display = "block";
-  errorBox.textContent = "";
-  results.innerHTML = "";
 
-  const formData = new FormData();
-  formData.append("image", selectedFile);
+/* =========================
+   CAMERA
+========================= */
 
-  try {
+camera.addEventListener(
+  "change",
+  function() {
 
-    const response = await fetch("/api/analyze", {
-      method: "POST",
-      body: formData
-    });
+    chooseFile(
+      this.files[0]
+    );
 
-    const data = await response.json();
-
-    if (!response.ok) {
-      throw new Error(
-        data.error || "Analysis failed."
-      );
-    }
-
-    if (!data.matches || !data.matches.length) {
-      throw new Error(
-        "No matches were found."
-      );
-    }
-
-    data.matches.forEach(function(match, index) {
-
-      const card = document.createElement("div");
-      card.className = "match";
-
-      card.innerHTML = `
-        <div class="match-number">
-          MATCH ${index + 1}
-        </div>
-
-        <div class="game">
-          ⚽ ${escapeHtml(match.game)}
-        </div>
-
-        <div class="row">
-          <span class="label">1X2 Odds</span>
-          <span class="value">
-            ${escapeHtml(match.odds)}
-          </span>
-        </div>
-
-        <div class="prediction">
-          <div class="prediction-title">
-            🎯 AI PREDICTION
-          </div>
-
-          <div class="value">
-            ${escapeHtml(match.prediction)}
-          </div>
-        </div>
-
-        <div class="row">
-          <span class="label">Alternative</span>
-          <span class="value">
-            ${escapeHtml(match.alternative)}
-          </span>
-        </div>
-
-        <div class="row">
-          <span class="label">Confidence</span>
-          <span class="value">
-            ${escapeHtml(match.confidence)}
-          </span>
-        </div>
-
-        <div class="row">
-          <span class="label">Risk</span>
-          <span class="value">
-            ${escapeHtml(match.risk)}
-          </span>
-        </div>
-
-        <div class="analysis">
-          ${escapeHtml(
-            match.analysis ||
-            "AI estimate based on visible information."
-          )}
-        </div>
-      `;
-
-      results.appendChild(card);
-    });
-
-  } catch (error) {
-
-    errorBox.textContent =
-      "❌ " + error.message;
-
-  } finally {
-
-    analyze.disabled = false;
-    loading.style.display = "none";
   }
-});
+);
 
-function escapeHtml(value) {
-  return String(value)
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#039;");
-}
-</script>
 
-</body>
-  </html>
+/* =========================
+   ANALYZE
+========================= */
+
+analyze.addEventListener
