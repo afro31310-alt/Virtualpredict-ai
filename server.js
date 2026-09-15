@@ -6,7 +6,7 @@ const path = require("path");
 const app = express();
 const PORT = process.env.PORT || 10000;
 
-const openai = new OpenAI({
+const ai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY
 });
 
@@ -24,93 +24,71 @@ app.get("/", (req, res) => {
 app.post("/api/analyze", upload.single("image"), async (req, res) => {
   try {
     if (!req.file) {
-      return res.status(400).json({
-        error: "Please upload a screenshot."
-      });
+      return res.status(400).json({ error: "Upload a screenshot." });
     }
 
-    if (!process.env.OPENAI_API_KEY) {
-      return res.status(500).json({
-        error: "OPENAI_API_KEY is missing in Render."
-      });
-    }
-
-    const mime = req.file.mimetype || "image/jpeg";
-    const base64 = req.file.buffer.toString("base64");
-    const image = `data:${mime};base64,${base64}`;
+    const image =
+      `data:${req.file.mimetype};base64,` +
+      req.file.buffer.toString("base64");
 
     const prompt = `
-Analyze EVERY clearly readable football or virtual match in this screenshot.
-
-Return ONLY JSON in this format:
+Analyze ALL readable matches in this screenshot.
+Return ONLY JSON.
 
 {
-  "matches": [
-    {
-      "game": "Team A vs Team B",
-      "odds": "1.80 / 3.50 / 4.20",
-      "prediction": "Team A Win",
-      "overUnder": {
-        "line": "2.5",
-        "prediction": "Over 2.5 Goals",
-        "over": "Not available",
-        "under": "Not available"
-      },
-      "confidence": "Medium",
-      "risk": "Medium"
-    }
-  ]
+ "matches":[
+  {
+   "game":"Team A vs Team B",
+   "odds":"1.80 / 3.50 / 4.20",
+   "prediction":"Team A Win",
+   "overUnder":{
+    "line":"2.5",
+    "prediction":"Over 2.5 Goals",
+    "over":"Not available",
+    "under":"Not available"
+   },
+   "confidence":"Medium",
+   "risk":"Medium"
+  }
+ ]
 }
 
-IMPORTANT:
-- Analyze ALL readable matches, not just one.
-- Do not invent team names.
-- Do not invent odds.
-- If Over/Under odds are not visible, use "Not available".
-- Still provide an Over/Under ESTIMATE for every readable match.
-- Use only: Over 1.5 Goals, Under 1.5 Goals, Over 2.5 Goals, Under 2.5 Goals, Over 3.5 Goals, Under 3.5 Goals.
-- Predictions are estimates, not guarantees.
+Rules:
+Analyze every readable match.
+Never invent team names or odds.
+If O/U odds are missing, say "Not available".
+Still give an O/U estimate for every match.
+Use Over/Under 1.5, 2.5 or 3.5 Goals.
+Predictions are estimates, not guarantees.
 `;
 
-    let response;
+    let r;
 
     try {
-      response = await openai.responses.create({
+      r = await ai.responses.create({
         model: "gpt-5.6-luna",
-        max_output_tokens: 1100,
-        input: [
-          {
-            role: "user",
-            content: [
-              {
-                type: "input_text",
-                text: prompt
-              },
-              {
-                type: "input_image",
-                image_url: image
-              }
-            ]
-          }
-        ]
+        max_output_tokens: 900,
+        input: [{
+          role: "user",
+          content: [
+            { type: "input_text", text: prompt },
+            { type: "input_image", image_url: image }
+          ]
+        }]
       });
-    } catch (error) {
-      console.error("OPENAI ERROR:", error);
-
-      if (error.status === 429) {
+    } catch (e) {
+      if (e.status === 429) {
         return res.status(429).json({
-          error: "AI rate limit reached. Please wait for the limit to reset."
+          error: "AI rate limit reached. Please wait and try again later."
         });
       }
 
-      return res.status(error.status || 500).json({
-        error: error.message || "OpenAI request failed."
+      return res.status(e.status || 500).json({
+        error: e.message || "AI request failed."
       });
     }
 
-    let text = response.output_text || "";
-
-    text = text
+    let text = (r.output_text || "")
       .replace(/```json/gi, "")
       .replace(/```/g, "")
       .trim();
@@ -121,4 +99,54 @@ IMPORTANT:
       });
     }
 
-   
+    let data;
+
+    try {
+      data = JSON.parse(text);
+    } catch (e) {
+      return res.status(500).json({
+        error: "AI returned invalid JSON."
+      });
+    }
+
+    if (!Array.isArray(data.matches) || !data.matches.length) {
+      return res.status(500).json({
+        error: "No readable matches found."
+      });
+    }
+
+    data.matches = data.matches.map(m => {
+      const ou = m.overUnder || {};
+      const line = ou.line || "2.5";
+      const ouPrediction =
+        ou.prediction || `Over ${line} Goals`;
+
+      return {
+        game: m.game || "Unknown match",
+        odds: m.odds || "Not available",
+        prediction: m.prediction || "No estimate",
+        alternative: ouPrediction,
+        overUnder: {
+          line: line,
+          prediction: ouPrediction,
+          over: ou.over || "Not available",
+          under: ou.under || "Not available"
+        },
+        confidence: m.confidence || "Medium",
+        risk: m.risk || "Medium"
+      };
+    });
+
+    res.json(data);
+
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({
+      error: e.message || "Server error."
+    });
+  }
+});
+
+app.listen(PORT, "0.0.0.0", () => {
+  console.log("VirtualPredict AI running on port " + PORT);
+});
