@@ -7,25 +7,20 @@ const app = express();
 
 const PORT = process.env.PORT || 10000;
 
-
-/* =========================
-   OPENAI
-========================= */
-
 const client = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY
 });
 
 
 /* =========================
-   IMAGE UPLOAD
+   UPLOAD
 ========================= */
 
 const upload = multer({
   storage: multer.memoryStorage(),
 
   limits: {
-    fileSize: 10 * 1024 * 1024
+    fileSize: 8 * 1024 * 1024
   }
 });
 
@@ -55,7 +50,7 @@ app.get("/", (req, res) => {
 
 
 /* =========================
-   ANALYZE SCREENSHOT
+   ANALYZE
 ========================= */
 
 app.post(
@@ -65,291 +60,97 @@ app.post(
 
     try {
 
-      /* CHECK IMAGE */
-
       if (!req.file) {
 
         return res.status(400).json({
-          error:
-            "Please upload a screenshot."
+          error: "Please upload a screenshot."
         });
 
       }
 
-
-      /* CHECK API KEY */
 
       if (!process.env.OPENAI_API_KEY) {
 
         return res.status(500).json({
-          error:
-            "AI service is not configured."
+          error: "OPENAI_API_KEY is not configured."
         });
 
       }
 
 
-      /* CONVERT IMAGE */
+      /* IMAGE */
 
-      const mimeType =
-        req.file.mimetype ||
-        "image/jpeg";
+      const mime =
+        req.file.mimetype || "image/jpeg";
 
-      const base64Image =
+      const base64 =
         req.file.buffer.toString("base64");
 
-      const imageDataUrl =
-        `data:${mimeType};base64,${base64Image}`;
+      const image =
+        `data:${mime};base64,${base64}`;
 
 
       /* =========================
-         AI INSTRUCTIONS
+         SHORT PROMPT
       ========================= */
 
       const prompt = `
+Analyze EVERY readable football match in this screenshot.
 
-You are an AI assistant analyzing an
-instant virtual football screenshot.
+Return ONLY valid JSON.
 
-Your job is to analyze EVERY readable
-football match in the screenshot.
-
-IMPORTANT:
-
-1. Find EVERY readable match.
-
-2. Never analyze only the first match.
-
-3. Never invent a match.
-
-4. Never invent team names.
-
-5. Carefully read the team names.
-
-6. Carefully read visible 1X2 odds.
-
-7. Carefully read visible Over/Under
-   odds if they exist.
-
-8. If Over/Under odds are NOT visible,
-   you MUST STILL PROVIDE AN
-   OVER/UNDER ESTIMATE.
-
-9. When Over/Under odds are not visible,
-   do NOT invent or create fake odds.
-
-10. The Over/Under estimate should be based
-    only on information reasonably visible
-    in the screenshot, such as the teams,
-    1X2 market, odds relationship and other
-    readable information.
-
-11. If there is not enough information for
-    a strong Over/Under opinion, give a
-    conservative estimate and mark confidence
-    Low.
-
-12. Every readable match MUST have an
-    Over/Under prediction.
-
-13. Virtual football results are random.
-    Predictions are estimates only and are
-    NOT guaranteed.
-
-14. Do not claim that any prediction is
-    certain or guaranteed.
-
-
-========================
-MARKETS
-========================
-
-Analyze BOTH:
-
-A. 1X2
-
-B. OVER/UNDER
-
-
-========================
-OVER/UNDER RULE
-========================
-
-For EVERY match, provide:
-
-- An Over/Under line
-- An Over/Under estimate
-- Over/Under odds IF visible
-- "Not available" for O/U odds IF they
-  are not visible
-
-
-Example when odds ARE visible:
-
-"overUnder": {
-  "line": "2.5",
-  "over": "1.85",
-  "under": "1.95",
-  "prediction": "Over 2.5 Goals"
-}
-
-
-Example when odds are NOT visible:
-
-"overUnder": {
-  "line": "2.5",
-  "over": "Not available",
-  "under": "Not available",
-  "prediction": "Over 2.5 Goals"
-}
-
-
-IMPORTANT:
-
-The prediction MUST NOT be:
-
-"Not available"
-
-Every match must receive an
-Over/Under prediction.
-
-
-Possible predictions include:
-
-Over 1.5 Goals
-Under 1.5 Goals
-Over 2.5 Goals
-Under 2.5 Goals
-Over 3.5 Goals
-Under 3.5 Goals
-
-
-Choose the line that is most reasonable
-from the visible information.
-
-Do not pretend the line or odds came from
-the screenshot if they were not visible.
-
-
-========================
-1X2
-========================
-
-If 1X2 odds are visible, report them.
-
-Format:
-
-"odds": "HOME / DRAW / AWAY"
-
-
-Example:
-
-"odds": "1.72 / 3.96 / 4.65"
-
-
-If the odds cannot be read:
-
-"odds": "Not available"
-
-
-Do not invent unreadable odds.
-
-
-========================
-PREDICTION
-========================
-
-Provide:
-
-- prediction
-- alternative
+For each readable match return:
+- game
+- 1X2 odds if visible
+- 1X2 prediction
+- Over/Under line
+- Over/Under prediction
+- Over/Under odds only if actually visible
 - confidence
 - risk
-- analysis
+- short analysis
 
+IMPORTANT:
+Never return only one match.
+Do not invent team names.
+Do not invent 1X2 odds.
+If O/U odds are not visible, use:
+"over": "Not available"
+"under": "Not available"
 
-Confidence:
+BUT you MUST still give an AI Over/Under estimate based on the readable information.
 
-Low
-Medium
-High
+Possible O/U estimates:
+"Over 1.5 Goals"
+"Under 1.5 Goals"
+"Over 2.5 Goals"
+"Under 2.5 Goals"
+"Over 3.5 Goals"
+"Under 3.5 Goals"
 
-
-Risk:
-
-Low
-Medium
-High
-
-
-The analysis must explain briefly why
-the estimate was selected.
-
-Do not use fake statistics.
-
-Do not claim access to live information
-unless it is actually visible in the image.
-
-
-========================
-JSON
-========================
-
-RETURN ONLY VALID JSON.
-
-Use exactly this structure:
+Return this structure:
 
 {
   "matches": [
     {
-      "game": "LEE vs HUL",
-      "market": "1X2 + Over/Under",
-      "odds": "1.72 / 3.96 / 4.65",
+      "game": "TEAM A vs TEAM B",
+      "odds": "1.80 / 3.50 / 4.20",
       "overUnder": {
         "line": "2.5",
         "over": "Not available",
         "under": "Not available",
         "prediction": "Over 2.5 Goals"
       },
-      "prediction": "LEE Win",
+      "prediction": "TEAM A Win",
       "alternative": "Over 2.5 Goals",
       "confidence": "Medium",
       "risk": "Medium",
-      "analysis": "Brief explanation based on the visible information."
+      "analysis": "Short explanation."
     }
   ]
 }
 
-
-========================
-VERY IMPORTANT
-========================
-
-If there are 2 readable matches,
-return 2 objects.
-
-If there are 5 readable matches,
-return 5 objects.
-
-If there are 10 readable matches,
-return 10 objects.
-
-Never return only one match.
-
-Every readable match MUST have:
-
-1. 1X2 information
-2. Over/Under line
-3. Over/Under prediction
-4. Confidence
-5. Risk
-6. Analysis
-
-Even when Over/Under odds are not visible.
-
-
-Return ONLY JSON.
-
+Virtual-game results are random. Predictions are estimates only, not guarantees.
 `;
 
 
@@ -357,43 +158,117 @@ Return ONLY JSON.
          OPENAI REQUEST
       ========================= */
 
-      const response =
-        await client.responses.create({
+      let response;
 
-          model:
-            "gpt-5.6-luna",
+      let lastError;
 
-          input: [
 
-            {
-              role: "user",
+      /*
+       * Retry temporary 429 errors.
+       * Wait progressively between attempts.
+       */
 
-              content: [
+      for (
+        let attempt = 0;
+        attempt < 3;
+        attempt++
+      ) {
+
+        try {
+
+          response =
+            await client.responses.create({
+
+              model: "gpt-5.6-luna",
+
+              max_output_tokens: 1800,
+
+              input: [
 
                 {
-                  type: "input_text",
+                  role: "user",
 
-                  text: prompt
-                },
+                  content: [
 
-                {
-                  type: "input_image",
+                    {
+                      type: "input_text",
 
-                  image_url:
-                    imageDataUrl
+                      text: prompt
+
+                    },
+
+                    {
+                      type: "input_image",
+
+                      image_url: image
+
+                    }
+
+                  ]
+
                 }
 
               ]
 
-            }
+            });
 
-          ]
 
-        });
+          break;
+
+        } catch (error) {
+
+          lastError = error;
+
+
+          /*
+           * Only retry rate-limit errors.
+           */
+
+          if (
+            error &&
+            error.status === 429
+          ) {
+
+            const wait =
+              3000 *
+              Math.pow(2, attempt);
+
+            console.log(
+              `Rate limited. Waiting ${wait}ms...`
+            );
+
+            await new Promise(
+              resolve =>
+                setTimeout(
+                  resolve,
+                  wait
+                )
+            );
+
+            continue;
+
+          }
+
+
+          throw error;
+
+        }
+
+      }
+
+
+      if (!response) {
+
+        throw lastError ||
+          new Error(
+            "AI request failed."
+          );
+
+      }
 
 
       /* =========================
-         READ RESPONSE
+         READ AI RESPONSE
       ========================= */
 
       let text =
@@ -431,21 +306,17 @@ Return ONLY JSON.
       } catch (error) {
 
         console.error(
-          "Invalid AI JSON:",
+          "AI JSON ERROR:",
           text
         );
 
         return res.status(500).json({
           error:
-            "The AI returned an invalid result. Please try again."
+            "AI returned an invalid result. Please try again."
         });
 
       }
 
-
-      /* =========================
-         CHECK MATCHES
-      ========================= */
 
       if (
         !result.matches ||
@@ -460,7 +331,9 @@ Return ONLY JSON.
       }
 
 
-      if (result.matches.length === 0) {
+      if (
+        result.matches.length === 0
+      ) {
 
         return res.status(500).json({
           error:
@@ -471,148 +344,148 @@ Return ONLY JSON.
 
 
       /* =========================
-         NORMALIZE RESULTS
+         NORMALIZE
       ========================= */
 
       const matches =
-        result.matches.map((match) => {
+        result.matches.map(
+          match => {
+
+            const ou =
+              match.overUnder ||
+              match.over_under ||
+              {};
 
 
-          let overUnder =
-            match.overUnder ||
-            match.over_under ||
-            {};
+            const line =
+              ou.line ||
+              match.overUnderLine ||
+              match.ouLine ||
+              "2.5";
 
 
-          /* OVER/UNDER LINE */
-
-          const line =
-            overUnder.line ||
-            match.overUnderLine ||
-            match.ouLine ||
-            "2.5";
+            const over =
+              ou.over ||
+              "Not available";
 
 
-          /* OVER ODDS */
-
-          const over =
-            overUnder.over ||
-            match.over ||
-            match.overOdds ||
-            "Not available";
+            const under =
+              ou.under ||
+              "Not available";
 
 
-          /* UNDER ODDS */
+            /*
+             * ALWAYS SHOW O/U ESTIMATE
+             */
 
-          const under =
-            overUnder.under ||
-            match.under ||
-            match.underOdds ||
-            "Not available";
-
-
-          /* OVER/UNDER PREDICTION */
-
-          let ouPrediction =
-            overUnder.prediction ||
-            match.overUnderPrediction ||
-            match.ouPrediction;
-
-
-          /*
-            Make sure an O/U estimate
-            always exists.
-          */
-
-          if (!ouPrediction) {
-
-            ouPrediction =
+            const ouPrediction =
+              ou.prediction ||
+              match.overUnderPrediction ||
+              match.ouPrediction ||
               `Over ${line} Goals`;
 
-          }
+
+            return {
+
+              game:
+                match.game ||
+                "Unknown match",
 
 
-          return {
-
-            game:
-              match.game ||
-              "Unknown match",
+              market:
+                "1X2 + Over/Under",
 
 
-            market:
-              match.market ||
-              "1X2 + Over/Under",
+              odds:
+                match.odds ||
+                "Not available",
 
 
-            odds:
-              match.odds ||
-              "Not available",
+              overUnder: {
 
+                line:
+                  line,
 
-            overUnder: {
+                over:
+                  over,
 
-              line:
-                line,
+                under:
+                  under,
 
-              over:
-                over,
+                prediction:
+                  ouPrediction
 
-              under:
-                under,
+              },
+
 
               prediction:
-                ouPrediction
-
-            },
-
-
-            prediction:
-              match.prediction ||
-              "No estimate",
+                match.prediction ||
+                "No estimate",
 
 
-            alternative:
-              match.alternative ||
-              ouPrediction,
+              alternative:
+                match.alternative ||
+                ouPrediction,
 
 
-            confidence:
-              match.confidence ||
-              "Low",
+              confidence:
+                match.confidence ||
+                "Low",
 
 
-            risk:
-              match.risk ||
-              "High",
+              risk:
+                match.risk ||
+                "High",
 
 
-            analysis:
-              match.analysis ||
-              "AI-assisted estimate based on the visible information."
+              analysis:
+                match.analysis ||
+                "AI estimate based on the visible information."
 
-          };
+            };
 
-        });
+          }
+        );
 
 
       /* =========================
-         SEND TO FRONTEND
+         RESPONSE
       ========================= */
 
       res.json({
-        matches: matches
+
+        matches:
+          matches
+
       });
 
 
     } catch (error) {
 
       console.error(
-        "Server error:",
+        "SERVER ERROR:",
         error
       );
 
 
-      /* OPENAI ERROR */
+      /* RATE LIMIT */
+
+      if (
+        error &&
+        error.status === 429
+      ) {
+
+        return res.status(429).json({
+
+          error:
+            "AI rate limit reached. Please wait a few minutes and try again."
+
+        });
+
+      }
+
+
+      /* OTHER OPENAI ERROR */
 
       if (
         error &&
@@ -625,7 +498,7 @@ Return ONLY JSON.
 
           error:
             error.message ||
-            "OpenAI API request failed."
+            "OpenAI request failed."
 
         });
 
@@ -638,7 +511,7 @@ Return ONLY JSON.
 
         error:
           error.message ||
-          "Unable to analyze the screenshot."
+          "Unable to analyze screenshot."
 
       });
 
@@ -649,7 +522,7 @@ Return ONLY JSON.
 
 
 /* =========================
-   START SERVER
+   START
 ========================= */
 
 app.listen(
