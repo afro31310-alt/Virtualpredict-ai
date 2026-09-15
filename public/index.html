@@ -89,7 +89,6 @@ header p{
   justify-content:center;
   background:#d90000;
   font-size:22px;
-  box-shadow:0 0 14px rgba(255,0,0,.35);
 }
 
 .card-title h2{
@@ -121,10 +120,6 @@ input[type=tel]{
   outline:none;
 }
 
-input[type=tel]:focus{
-  border-color:#ff1717;
-}
-
 .note{
   font-size:12px;
   color:#727b8b;
@@ -153,26 +148,31 @@ input[type=tel]:focus{
   gap:8px;
   background:linear-gradient(180deg,#e90000,#a90000);
   color:#fff;
-  padding:13px 20px;
+  padding:14px 20px;
   border-radius:10px;
   font-weight:bold;
   margin:4px;
   cursor:pointer;
   border:1px solid #ff3434;
+  min-width:130px;
+  user-select:none;
+  -webkit-tap-highlight-color:transparent;
 }
 
-input[type=file]{
-  position:absolute;
-  width:1px;
-  height:1px;
-  opacity:0;
+.filebtn:active{
+  transform:scale(.97);
+}
+
+.file-input{
+  display:none !important;
 }
 
 #selected{
   display:none;
   color:#00e889;
   font-weight:bold;
-  margin:14px 0 5px;
+  margin:15px 0 5px;
+  font-size:14px;
 }
 
 #preview{
@@ -268,15 +268,12 @@ input[type=file]{
   border-radius:15px;
   padding:15px;
   margin:12px 0;
-  box-shadow:0 0 12px rgba(255,0,0,.08);
 }
 
 .match h3{
   margin:0 0 13px;
   font-size:18px;
 }
-
-/* MARKETS */
 
 .market-grid{
   display:grid;
@@ -324,24 +321,19 @@ input[type=file]{
   font-size:14px;
 }
 
-/* O/U PREDICTION */
-
 .ou-prediction{
   margin-top:12px;
   padding:14px;
   border-radius:11px;
   border:1px solid #ff1717;
-  background:
-    linear-gradient(135deg,rgba(255,0,0,.15),rgba(30,0,0,.45));
+  background:linear-gradient(135deg,rgba(255,0,0,.15),rgba(30,0,0,.45));
   text-align:center;
-  box-shadow:0 0 12px rgba(255,0,0,.12);
 }
 
 .ou-prediction-label{
   color:#aeb7c7;
   font-size:11px;
   font-weight:bold;
-  letter-spacing:.5px;
   margin-bottom:6px;
 }
 
@@ -349,7 +341,6 @@ input[type=file]{
   color:#00ee93;
   font-size:21px;
   font-weight:900;
-  text-transform:uppercase;
 }
 
 .details{
@@ -359,10 +350,6 @@ input[type=file]{
   margin-top:11px;
   border-top:1px solid #29303b;
   padding-top:12px;
-}
-
-.detail{
-  min-width:0;
 }
 
 .detail small{
@@ -458,10 +445,10 @@ footer strong{
 
   .filebtn{
     width:calc(50% - 12px);
-    padding:12px 5px;
+    min-width:0;
+    padding:13px 5px;
     font-size:13px;
   }
-
 }
 
 @media(max-width:390px){
@@ -473,7 +460,6 @@ footer strong{
   .ou-prediction-value{
     font-size:18px;
   }
-
 }
 </style>
 </head>
@@ -535,7 +521,7 @@ footer strong{
 </div>
 
 
-<!-- SCREENSHOT -->
+<!-- IMAGE -->
 
 <div class="card">
 
@@ -550,52 +536,70 @@ footer strong{
 
   </div>
 
+
   <div class="upload">
 
     <div class="upload-description">
-      Upload the screenshot containing the virtual games.
+      Select the screenshot containing the virtual games.
     </div>
 
-    <label for="gallery" class="filebtn">
-      🖼️ Gallery
-    </label>
 
-    <label for="camera" class="filebtn">
-      📷 Camera
+    <!-- GALLERY -->
+
+    <label
+      for="gallery"
+      class="filebtn"
+    >
+      🖼️ Gallery
     </label>
 
     <input
       id="gallery"
+      class="file-input"
       type="file"
       accept="image/*"
-      onchange="selectImage(this.files[0])"
     >
+
+
+    <!-- CAMERA -->
+
+    <label
+      for="camera"
+      class="filebtn"
+    >
+      📷 Camera
+    </label>
 
     <input
       id="camera"
+      class="file-input"
       type="file"
       accept="image/*"
       capture="environment"
-      onchange="selectImage(this.files[0])"
     >
+
 
     <div id="selected">
       ✅ Screenshot selected
     </div>
+
 
     <img
       id="preview"
       alt="Selected screenshot"
     >
 
+
     <button
       id="analyze"
-      onclick="analyzeAll()"
+      type="button"
     >
       🔍 Analyze All Games
     </button>
 
+
     <div id="status"></div>
+
     <div id="error"></div>
 
   </div>
@@ -659,116 +663,616 @@ footer strong{
 let file = null;
 
 
-/* =========================
-   SELECT IMAGE
-========================= */
+/* =========================================
+   GET ELEMENTS
+========================================= */
 
-function selectImage(f){
+const gallery =
+  document.getElementById("gallery");
+
+const camera =
+  document.getElementById("camera");
+
+const preview =
+  document.getElementById("preview");
+
+const selected =
+  document.getElementById("selected");
+
+const analyzeButton =
+  document.getElementById("analyze");
+
+const statusBox =
+  document.getElementById("status");
+
+const errorBox =
+  document.getElementById("error");
+
+
+/* =========================================
+   GALLERY CHANGE
+========================================= */
+
+gallery.addEventListener(
+  "change",
+  function(){
+
+    if(this.files && this.files.length > 0){
+
+      handleImage(this.files[0]);
+
+    }
+
+  }
+);
+
+
+/* =========================================
+   CAMERA CHANGE
+========================================= */
+
+camera.addEventListener(
+  "change",
+  function(){
+
+    if(this.files && this.files.length > 0){
+
+      handleImage(this.files[0]);
+
+    }
+
+  }
+);
+
+
+/* =========================================
+   HANDLE IMAGE
+========================================= */
+
+function handleImage(f){
+
+  errorBox.textContent = "";
+
+  statusBox.textContent = "";
 
   if(!f){
-    return;
-  }
-
-  if(!f.type.startsWith("image/")){
-
-    document.getElementById("error").textContent =
-      "❌ Please select an image.";
 
     return;
+
   }
+
+
+  /* CHECK TYPE */
+
+  if(
+    !f.type ||
+    !f.type.startsWith("image/")
+  ){
+
+    errorBox.textContent =
+      "❌ The selected file is not an image.";
+
+    return;
+
+  }
+
+
+  /* SAVE FILE */
 
   file = f;
 
-  const preview =
-    document.getElementById("preview");
 
-  preview.src =
-    URL.createObjectURL(f);
+  /* SHOW SELECTED */
 
-  preview.style.display =
+  selected.style.display =
     "block";
 
-  document.getElementById("selected")
-    .style.display = "block";
 
-  document.getElementById("analyze")
-    .style.display = "block";
+  selected.textContent =
+    "✅ Screenshot selected";
 
-  document.getElementById("analyze")
-    .disabled = false;
 
-  document.getElementById("error")
-    .textContent = "";
+  /* =========================================
+     USE FILEREADER
+  ========================================= */
 
-  document.getElementById("status")
-    .textContent =
-      "Screenshot selected. Ready to analyze.";
+  const reader =
+    new FileReader();
+
+
+  reader.onload = function(event){
+
+    preview.src =
+      event.target.result;
+
+    preview.style.display =
+      "block";
+
+
+    analyzeButton.style.display =
+      "block";
+
+
+    analyzeButton.disabled =
+      false;
+
+
+    statusBox.textContent =
+      "Screenshot ready. Tap Analyze All Games.";
+
+  };
+
+
+  reader.onerror = function(){
+
+    errorBox.textContent =
+      "❌ Could not load the selected image.";
+
+    preview.style.display =
+      "none";
+
+  };
+
+
+  reader.readAsDataURL(f);
 
 }
 
 
-/* =========================
-   ANALYZE ALL
-========================= */
+/* =========================================
+   ANALYZE BUTTON
+========================================= */
+
+analyzeButton.addEventListener(
+  "click",
+  analyzeAll
+);
+
+
+/* =========================================
+   ANALYZE
+========================================= */
 
 async function analyzeAll(){
 
   if(!file){
 
-    document.getElementById("error").textContent =
-      "❌ Select a screenshot first.";
+    errorBox.textContent =
+      "❌ Please select a screenshot first.";
 
     return;
+
   }
 
-  const button =
-    document.getElementById("analyze");
 
-  const status =
-    document.getElementById("status");
+  analyzeButton.disabled =
+    true;
 
-  const error =
-    document.getElementById("error");
+
+  statusBox.textContent =
+    "🔄 Analyzing all visible games...";
+
+
+  errorBox.textContent =
+    "";
+
 
   const results =
     document.getElementById("results");
 
+
   const matches =
     document.getElementById("matches");
 
-  button.disabled = true;
 
-  status.textContent =
-    "🔄 Analyzing all visible games...";
+  results.style.display =
+    "none";
 
-  error.textContent = "";
 
-  results.style.display = "none";
-
-  matches.innerHTML = "";
+  matches.innerHTML =
+    "";
 
 
   const form =
     new FormData();
 
-  form.append("image",file);
+
+  form.append(
+    "image",
+    file
+  );
 
 
   try{
 
     const response =
-      await fetch("/api/analyze",{
-
-        method:"POST",
-
-        body:form
-
-      });
+      await fetch(
+        "/api/analyze",
+        {
+          method:"POST",
+          body:form
+        }
+      );
 
 
     let data;
+
 
     try{
 
       data =
         await response.json();
+
+    }catch(e){
+
+      throw new Error(
+        "Server returned an invalid response."
+      );
+
+    }
+
+
+    if(!response.ok){
+
+      throw new Error(
+        data.error ||
+        "Analysis failed."
+      );
+
+    }
+
+
+    if(
+      !Array.isArray(data.matches) ||
+      data.matches.length === 0
+    ){
+
+      throw new Error(
+        "No readable matches were found."
+      );
+
+    }
+
+
+    document.getElementById("count")
+      .textContent =
+      "🎯 " +
+      data.matches.length +
+      " Matches Detected";
+
+
+    data.matches.forEach(
+      function(m,i){
+
+        const div =
+          document.createElement("div");
+
+
+        div.className =
+          "match";
+
+
+        const ou =
+          m.overUnder ||
+          m.over_under ||
+          m.overunder ||
+          {};
+
+
+        const line =
+          ou.line ||
+          m.overUnderLine ||
+          m.ouLine ||
+          "2.5";
+
+
+        const over =
+          ou.over ||
+          m.over ||
+          m.overOdds ||
+          "Not available";
+
+
+        const under =
+          ou.under ||
+          m.under ||
+          m.underOdds ||
+          "Not available";
+
+
+        const ouPrediction =
+          ou.prediction ||
+          m.overUnderPrediction ||
+          m.ouPrediction ||
+          "Over " +
+          line +
+          " Goals";
+
+
+        const prediction =
+          m.prediction ||
+          "No estimate";
+
+
+        const alternative =
+          m.alternative ||
+          "None";
+
+
+        const confidence =
+          m.confidence ||
+          "Low";
+
+
+        const risk =
+          m.risk ||
+          "High";
+
+
+        const analysis =
+          m.analysis ||
+          "No analysis available.";
+
+
+        div.innerHTML = `
+
+          <h3>
+            ${i+1}.
+            ${safe(m.game || "Match")}
+          </h3>
+
+
+          <div class="market-grid">
+
+
+            <div class="market">
+
+              <div class="market-title">
+                1X2 MARKET
+              </div>
+
+              <div class="odds">
+
+                <div class="odd">
+                  1
+                  <strong>
+                    ${safe(getOdd(m,"1"))}
+                  </strong>
+                </div>
+
+                <div class="odd">
+                  X
+                  <strong>
+                    ${safe(getOdd(m,"X"))}
+                  </strong>
+                </div>
+
+                <div class="odd">
+                  2
+                  <strong>
+                    ${safe(getOdd(m,"2"))}
+                  </strong>
+                </div>
+
+              </div>
+
+            </div>
+
+
+            <div class="market">
+
+              <div class="market-title">
+                OVER/UNDER ${safe(line)}
+              </div>
+
+              <div class="odds two">
+
+                <div class="odd">
+                  OVER
+                  <strong>
+                    ${safe(over)}
+                  </strong>
+                </div>
+
+                <div class="odd">
+                  UNDER
+                  <strong>
+                    ${safe(under)}
+                  </strong>
+                </div>
+
+              </div>
+
+            </div>
+
+          </div>
+
+
+          <div class="ou-prediction">
+
+            <div class="ou-prediction-label">
+              ⚡ OVER/UNDER AI ESTIMATE
+            </div>
+
+            <div class="ou-prediction-value">
+              ${safe(ouPrediction)}
+            </div>
+
+          </div>
+
+
+          <div class="details">
+
+            <div class="detail">
+
+              <small>
+                1X2 AI ESTIMATE
+              </small>
+
+              <div class="detail-value prediction">
+                ${safe(prediction)}
+              </div>
+
+            </div>
+
+
+            <div class="detail">
+
+              <small>
+                ALTERNATIVE
+              </small>
+
+              <div class="detail-value">
+                ${safe(alternative)}
+              </div>
+
+            </div>
+
+
+            <div class="detail">
+
+              <small>
+                CONFIDENCE
+              </small>
+
+              <div class="detail-value confidence">
+                ${safe(confidence)}
+              </div>
+
+            </div>
+
+
+            <div class="detail">
+
+              <small>
+                RISK
+              </small>
+
+              <div class="detail-value risk">
+                ${safe(risk)}
+              </div>
+
+            </div>
+
+          </div>
+
+
+          <div class="analysis">
+
+            <strong>ANALYSIS</strong>
+
+            <br><br>
+
+            ${safe(analysis)}
+
+          </div>
+
+        `;
+
+
+        matches.appendChild(div);
+
+      }
+    );
+
+
+    results.style.display =
+      "block";
+
+
+    statusBox.textContent =
+      "✅ Analysis complete.";
+
+
+    results.scrollIntoView({
+      behavior:"smooth",
+      block:"start"
+    });
+
+
+  }catch(e){
+
+    errorBox.textContent =
+      "❌ " +
+      e.message;
+
+    statusBox.textContent =
+      "";
+
+  }finally{
+
+    analyzeButton.disabled =
+      false;
+
+  }
+
+}
+
+
+/* =========================================
+   GET ODDS
+========================================= */
+
+function getOdd(m,type){
+
+  if(m.oddsObject){
+
+    return (
+      m.oddsObject[type] ||
+      "N/A"
+    );
+
+  }
+
+
+  if(
+    typeof m.odds === "string"
+  ){
+
+    const parts =
+      m.odds.split("/");
+
+
+    if(type === "1")
+      return parts[0] || "N/A";
+
+
+    if(type === "X")
+      return parts[1] || "N/A";
+
+
+    if(type === "2")
+      return parts[2] || "N/A";
+
+  }
+
+
+  return "N/A";
+
+}
+
+
+/* =========================================
+   SAFE HTML
+========================================= */
+
+function safe(x){
+
+  return String(x)
+
+    .replace(/&/g,"&amp;")
+
+    .replace(/</g,"&lt;")
+
+    .replace(/>/g,"&gt;")
+
+    .replace(/"/g,"&quot;")
+
+    .replace(/'/g,"&#039;");
+
+}
+
+</script>
+
+</body>
+  </html>
